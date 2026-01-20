@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banners - Admin - KeyVault</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { primary: '#2563EB', secondary: '#1E293B', success: '#10B981', danger: '#EF4444' }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; color: #1E293B; min-height: 100vh; display: flex; }
+        .progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, #2563EB, #3B82F6); z-index: 9999; }
+        .progress-bar.loading { animation: progress 1.5s ease-in-out infinite; }
+        @keyframes progress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
+        .sidebar { width: 260px; background: #1E293B; min-height: 100vh; padding: 24px 16px; position: fixed; left: 0; top: 0; z-index: 50; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94A3B8; text-decoration: none; border-radius: 10px; transition: all 0.2s; font-weight: 500; margin-bottom: 4px; }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: #FFFFFF; }
+        .sidebar-nav a.active { background: #2563EB; color: #FFFFFF; }
+        .main-content { margin-left: 260px; flex: 1; padding: 32px; }
+        .banner-card { background: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .banner-image { width: 100%; aspect-ratio: 21/9; object-fit: cover; }
+        .btn-primary { padding: 10px 20px; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { background: #1D4ED8; }
+        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background: #EFF6FF; color: #2563EB; }
+        .btn-edit:hover { background: #2563EB; color: white; }
+        .btn-delete { background: #FEF2F2; color: #DC2626; }
+        .btn-delete:hover { background: #DC2626; color: white; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal { background: white; border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
+        .modal-overlay.active .modal { transform: scale(1); }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 12px 14px; border: 2px solid #E2E8F0; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
+        .form-input:focus { outline: none; border-color: #2563EB; }
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: #E2E8F0; border-radius: 12px; cursor: pointer; transition: all 0.2s; display: inline-block; }
+        .toggle-switch.active { background: #10B981; }
+        .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-switch.active::after { left: 22px; }
+        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+        .status-dot.active { background: #10B981; }
+        .status-dot.inactive { background: #EF4444; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <aside class="sidebar">
+        <div class="flex items-center gap-3 mb-8 px-2">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center"><i class="fas fa-key text-white"></i></div>
+            <span class="text-white font-bold text-lg">KeyVault</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="/admin/products.html"><i class="fas fa-box"></i> Products</a>
+            <a href="/admin/orders.html"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="/admin/banners.html" class="active"><i class="fas fa-images"></i> Banners</a>
+        </nav>
+        <div class="absolute bottom-6 left-4 right-4">
+            <button onclick="adminLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-secondary">Homepage Banners</h1>
+                <p class="text-gray-500">Manage hero slider images</p>
+            </div>
+            <button class="btn-primary" onclick="openBannerModal()">
+                <i class="fas fa-plus"></i> Add Banner
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="bannersGrid">
+            <!-- Rendered via JS -->
+        </div>
+    </main>
+
+    <!-- Banner Modal -->
+    <div class="modal-overlay" id="bannerModal">
+        <div class="modal">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-secondary" id="bannerModalTitle">Add Banner</h2>
+                    <button onclick="closeBannerModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            <form id="bannerForm" class="p-6" onsubmit="saveBanner(event)">
+                <input type="hidden" id="bannerId">
+                <div class="form-group">
+                    <label class="form-label">Image URL</label>
+                    <input type="url" id="bannerImage" class="form-input" placeholder="https://images.unsplash.com/..." required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Title</label>
+                    <input type="text" id="bannerTitle" class="form-input" placeholder="Summer Sale!">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Subtitle</label>
+                    <input type="text" id="bannerSubtitle" class="form-input" placeholder="Up to 50% off">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Target Link</label>
+                    <input type="text" id="bannerLink" class="form-input" placeholder="/?filter=sale">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Button Text</label>
+                    <input type="text" id="bannerBtn" class="form-input" placeholder="Shop Now" value="Shop Now">
+                </div>
+                <div class="form-group">
+                    <label class="form-label flex items-center gap-3">
+                        <span class="toggle-switch active" id="toggleActive" onclick="this.classList.toggle('active')"></span>
+                        Active
+                    </label>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn-primary flex-1">Save Banner</button>
+                    <button type="button" onclick="closeBannerModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let allBanners = [];
+
+        const checkAdminAuth = () => { 
+            if (!localStorage.getItem('admin_token')) { 
+                window.location.href = 'login.html'; 
+                return false; 
+            } 
+            return true; 
+        };
+        
+        const adminLogout = () => { 
+            localStorage.removeItem('admin_token'); 
+            localStorage.removeItem('admin_user'); 
+            window.location.href = 'login.html'; 
+        };
+        
+        const showLoader = () => document.getElementById('progressBar').classList.add('loading');
+        const hideLoader = () => { 
+            document.getElementById('progressBar').classList.remove('loading'); 
+            document.getElementById('progressBar').style.width = '0%'; 
+        };
+
+        const loadBanners = async () => {
+            allBanners = [
+                { id: 1, image_url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=1200', title: 'Summer Gaming Sale', subtitle: 'Up to 50% off on all Xbox and PlayStation keys', target_url: '/?filter=sale', btn_text: 'Shop Sale', is_active: true },
+                { id: 2, image_url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=1200', title: 'Steam Wallet Cards', subtitle: 'Top up your Steam wallet instantly', target_url: '/?platform=steam', btn_text: 'Get Steam Cards', is_active: true },
+                { id: 3, image_url: 'https://images.unsplash.com/photo-1493711662062-fa541f7f3d24?w=1200', title: 'Gift Cards Galore', subtitle: 'Netflix, Spotify, Amazon and more', target_url: '/?category=vouchers', btn_text: 'Browse Gift Cards', is_active: false },
+            ];
+            renderBanners();
+        };
+
+        const renderBanners = () => {
+            document.getElementById('bannersGrid').innerHTML = allBanners.map(b => `
+                <div class="banner-card">
+                    <img src="${b.image_url}" alt="${b.title}" class="banner-image" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800'">
+                    <div class="p-4">
+                        <div class="flex items-center justify-between mb-2">
+                            <h3 class="font-semibold text-secondary">${b.title || 'Untitled Banner'}</h3>
+                            <span class="flex items-center gap-2 text-sm ${b.is_active ? 'text-success' : 'text-danger'}">
+                                <span class="status-dot ${b.is_active ? 'active' : 'inactive'}"></span>
+                                ${b.is_active ? 'Active' : 'Inactive'}
+                            </span>
+                        </div>
+                        <p class="text-sm text-gray-500 mb-4">${b.subtitle || ''}</p>
+                        <div class="flex gap-2">
+                            <button class="btn-sm btn-edit" onclick="editBanner(${b.id})"><i class="fas fa-edit mr-1"></i>Edit</button>
+                            <button class="btn-sm btn-delete" onclick="deleteBanner(${b.id})"><i class="fas fa-trash mr-1"></i>Delete</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        };
+
+        const openBannerModal = (banner = null) => {
+            document.getElementById('bannerModalTitle').textContent = banner ? 'Edit Banner' : 'Add Banner';
+            document.getElementById('bannerId').value = banner?.id || '';
+            document.getElementById('bannerImage').value = banner?.image_url || '';
+            document.getElementById('bannerTitle').value = banner?.title || '';
+            document.getElementById('bannerSubtitle').value = banner?.subtitle || '';
+            document.getElementById('bannerLink').value = banner?.target_url || '';
+            document.getElementById('bannerBtn').value = banner?.btn_text || 'Shop Now';
+            document.getElementById('toggleActive').classList.toggle('active', banner?.is_active !== false);
+            document.getElementById('bannerModal').classList.add('active');
+        };
+
+        const closeBannerModal = () => document.getElementById('bannerModal').classList.remove('active');
+
+        const editBanner = (id) => {
+            const banner = allBanners.find(b => b.id === id);
+            if (banner) openBannerModal(banner);
+        };
+
+        const deleteBanner = (id) => {
+            Swal.fire({
+                icon: 'warning', 
+                title: 'Delete Banner?', 
+                text: 'This will remove the banner from the homepage.',
+                showCancelButton: true, 
+                confirmButtonColor: '#DC2626', 
+                confirmButtonText: 'Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    allBanners = allBanners.filter(b => b.id !== id);
+                    renderBanners();
+                    Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
+                }
+            });
+        };
+
+        const saveBanner = (e) => {
+            e.preventDefault();
+            
+            const id = document.getElementById('bannerId').value;
+            const bannerData = {
+                id: id ? parseInt(id) : Date.now(),
+                image_url: document.getElementById('bannerImage').value,
+                title: document.getElementById('bannerTitle').value,
+                subtitle: document.getElementById('bannerSubtitle').value,
+                target_url: document.getElementById('bannerLink').value,
+                btn_text: document.getElementById('bannerBtn').value,
+                is_active: document.getElementById('toggleActive').classList.contains('active')
+            };
+
+            if (id) {
+                // Update existing
+                const index = allBanners.findIndex(b => b.id === parseInt(id));
+                if (index !== -1) allBanners[index] = bannerData;
+            } else {
+                // Add new
+                allBanners.push(bannerData);
+            }
+
+            renderBanners();
+            Swal.fire({ icon: 'success', title: 'Banner Saved!', timer: 1500, showConfirmButton: false });
+            closeBannerModal();
+        };
+
+        // Close modal on backdrop click
+        document.getElementById('bannerModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('bannerModal')) closeBannerModal();
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            if (checkAdminAuth()) loadBanners();
+        });
+    </script>
+</body>
+</html>
