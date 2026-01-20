@@ -1,0 +1,446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Products - Admin - KeyVault</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: { primary: '#2563EB', secondary: '#1E293B', success: '#10B981', danger: '#EF4444, warning: '#F59E0B' },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; color: #1E293B; min-height: 100vh; display: flex; }
+
+        .progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, #2563EB, #3B82F6); z-index: 9999; }
+        .progress-bar.loading { animation: progress 1.5s ease-in-out infinite; }
+        @keyframes progress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
+
+        .sidebar { width: 260px; background: #1E293B; min-height: 100vh; padding: 24px 16px; position: fixed; left: 0; top: 0; z-index: 50; }
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94A3B8; text-decoration: none; border-radius: 10px; transition: all 0.2s; font-weight: 500; margin-bottom: 4px; }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: #FFFFFF; }
+        .sidebar-nav a.active { background: #2563EB; color: #FFFFFF; }
+
+        .main-content { margin-left: 260px; flex: 1; padding: 32px; }
+
+        .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 12px 16px; background: #F8FAFC; font-weight: 600; color: #64748B; font-size: 12px; text-transform: uppercase; }
+        .data-table th:first-child { border-radius: 8px 0 0 8px; }
+        .data-table th:last-child { border-radius: 0 8px 8px 0; }
+        .data-table td { padding: 16px; border-bottom: 1px solid #F1F5F9; }
+        .data-table tr:hover td { background: #FAFBFC; }
+
+        .btn-primary { padding: 10px 20px; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { background: #1D4ED8; }
+
+        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-edit { background: #EFF6FF; color: #2563EB; }
+        .btn-edit:hover { background: #2563EB; color: white; }
+        .btn-delete { background: #FEF2F2; color: #DC2626; }
+        .btn-delete:hover { background: #DC2626; color: white; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all 0.3s; }
+        .modal-overlay.active { opacity: 1; visibility: visible; }
+        .modal { background: white; border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
+        .modal-overlay.active .modal { transform: scale(1); }
+
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+        .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 14px; border: 2px solid #E2E8F0; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
+        .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #2563EB; }
+        .form-textarea { resize: vertical; min-height: 100px; }
+
+        .toggle-switch { position: relative; width: 44px; height: 24px; background: #E2E8F0; border-radius: 12px; cursor: pointer; transition: all 0.2s; display: inline-block; }
+        .toggle-switch.active { background: #2563EB; }
+        .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .toggle-switch.active::after { left: 22px; }
+
+        .product-thumb { width: 60px; height: 40px; border-radius: 8px; object-fit: cover; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .badge-trending { background: #FEF3C7; color: #D97706; }
+        .badge-featured { background: #DBEAFE; color: #2563EB; }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="flex items-center gap-3 mb-8 px-2">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+                <i class="fas fa-key text-white"></i>
+            </div>
+            <span class="text-white font-bold text-lg">KeyVault</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/admin/dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="/admin/products.html" class="active"><i class="fas fa-box"></i> Products</a>
+            <a href="/admin/orders.html"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="/admin/banners.html"><i class="fas fa-images"></i> Banners</a>
+        </nav>
+        <div class="absolute bottom-6 left-4 right-4">
+            <button onclick="adminLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="flex items-center justify-between mb-8">
+            <div>
+                <h1 class="text-2xl font-bold text-secondary">Products</h1>
+                <p class="text-gray-500">Manage your product catalog</p>
+            </div>
+            <div class="flex gap-3">
+                <button class="btn-primary" onclick="openProductModal()">
+                    <i class="fas fa-plus"></i> Add Product
+                </button>
+                <button class="btn-primary" onclick="openUploadCodesModal()" style="background: #10B981;">
+                    <i class="fas fa-upload"></i> Upload Codes
+                </button>
+            </div>
+        </div>
+
+        <div class="table-card">
+            <div class="flex items-center justify-between mb-6">
+                <input type="text" id="searchInput" class="form-input" placeholder="Search products..." style="max-width: 300px;" oninput="filterProducts()">
+                <select id="filterCategory" class="form-select" style="max-width: 200px;" onchange="filterProducts()">
+                    <option value="">All Categories</option>
+                    <option value="gaming">Gaming</option>
+                    <option value="music">Music</option>
+                    <option value="vouchers">Gift Cards</option>
+                </select>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Platform</th>
+                            <th>Price</th>
+                            <th>Stock</th>
+                            <th>Tags</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="productsTable">
+                        <!-- Rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <!-- Upload Codes Modal -->
+    <div class="modal-overlay" id="uploadCodesModal">
+        <div class="modal">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-secondary">Upload Product Codes</h2>
+                    <button onclick="closeUploadCodesModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="uploadCodesForm" class="p-6" onsubmit="handleUploadCodes(event)">
+                <div class="form-group">
+                    <label class="form-label">Select Product</label>
+                    <select id="codeProductSelect" class="form-select" required>
+                        <option value="">Choose a product...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Upload File (CSV or TXT)</label>
+                    <input type="file" id="codesFile" class="form-input" accept=".csv,.txt" required>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <i class="fas fa-info-circle"></i> CSV format: one code per line or first column. TXT format: one code per line.
+                    </p>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn-primary flex-1">Upload Codes</button>
+                    <button type="button" onclick="closeUploadCodesModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Product Modal -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-secondary" id="modalTitle">Add Product</h2>
+                    <button onclick="closeProductModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="productForm" class="p-6" onsubmit="saveProduct(event)">
+                <input type="hidden" id="productId">
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="form-group col-span-2">
+                        <label class="form-label">Product Name</label>
+                        <input type="text" id="productName" class="form-input" placeholder="e.g. Xbox Game Pass Ultimate" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Platform</label>
+                        <select id="productPlatform" class="form-select" required>
+                            <option value="">Select Platform</option>
+                            <option value="Steam">Steam</option>
+                            <option value="Xbox">Xbox</option>
+                            <option value="PlayStation">PlayStation</option>
+                            <option value="Nintendo">Nintendo</option>
+                            <option value="Spotify">Spotify</option>
+                            <option value="Netflix">Netflix</option>
+                            <option value="Amazon">Amazon</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Category</label>
+                        <select id="productCategory" class="form-select">
+                            <option value="gaming">Gaming</option>
+                            <option value="music">Music</option>
+                            <option value="vouchers">Gift Cards</option>
+                            <option value="entertainment">Entertainment</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Price (USD)</label>
+                        <input type="number" id="productPrice" class="form-input" step="0.01" min="0" placeholder="49.99" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Discount %</label>
+                        <input type="number" id="productDiscount" class="form-input" min="0" max="100" placeholder="0">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Stock Quantity</label>
+                        <input type="number" id="productStock" class="form-input" min="0" placeholder="100" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Image URL</label>
+                        <input type="url" id="productImage" class="form-input" placeholder="https://..." required>
+                    </div>
+                    <div class="form-group col-span-2">
+                        <label class="form-label">Description</label>
+                        <textarea id="productDescription" class="form-textarea" placeholder="Product description..."></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label flex items-center gap-3">
+                            <span class="toggle-switch" id="toggleTrending" onclick="this.classList.toggle('active')"></span>
+                            Is Trending
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label flex items-center gap-3">
+                            <span class="toggle-switch" id="toggleFeatured" onclick="this.classList.toggle('active')"></span>
+                            Is Featured
+                        </label>
+                    </div>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn-primary flex-1">Save Product</button>
+                    <button type="button" onclick="closeProductModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'https://e-commerce-project-msez.onrender.com';
+        let allProducts = [];
+
+        const checkAdminAuth = () => {
+            if (!localStorage.getItem('admin_token')) { window.location.href = 'login.html'; return false; }
+            return true;
+        };
+
+        const adminLogout = () => { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href = 'login.html'; };
+
+        const showLoader = () => document.getElementById('progressBar').classList.add('loading');
+        const hideLoader = () => { document.getElementById('progressBar').classList.remove('loading'); document.getElementById('progressBar').style.width = '0%'; };
+
+        const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+
+        // Load Products
+        const loadProducts = async () => {
+            allProducts = [
+                { id: 1, name: 'Xbox Game Pass Ultimate - 3 Months', platform: 'Xbox', category: 'gaming', price_usd: 44.99, discount_percent: 10, stock_quantity: 50, image_url: 'https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=100', is_trending: true, is_featured: true },
+                { id: 2, name: 'PlayStation Plus Premium - 12 Months', platform: 'PlayStation', category: 'gaming', price_usd: 59.99, discount_percent: 15, stock_quantity: 30, image_url: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=100', is_trending: true, is_featured: true },
+                { id: 3, name: 'Steam Wallet Card - $50', platform: 'Steam', category: 'gaming', price_usd: 50.00, discount_percent: 0, stock_quantity: 100, image_url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=100', is_trending: false, is_featured: true },
+                { id: 4, name: 'Spotify Premium - 6 Months', platform: 'Spotify', category: 'music', price_usd: 59.99, discount_percent: 20, stock_quantity: 75, image_url: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=100', is_trending: true, is_featured: false },
+                { id: 5, name: 'Netflix Gift Card - $100', platform: 'Netflix', category: 'entertainment', price_usd: 100.00, discount_percent: 5, stock_quantity: 45, image_url: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=100', is_trending: false, is_featured: true },
+            ];
+            renderProducts(allProducts);
+        };
+
+        const renderProducts = (products) => {
+            document.getElementById('productsTable').innerHTML = products.map(p => `
+                <tr>
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <img src="${p.image_url}" alt="${p.name}" class="product-thumb" onerror="this.src='https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=100'">
+                            <div>
+                                <p class="font-medium">${p.name}</p>
+                                <p class="text-sm text-gray-500">${p.category}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="text-gray-600">${p.platform}</td>
+                    <td>
+                        <span class="font-semibold">${formatCurrency(p.price_usd)}</span>
+                        ${p.discount_percent > 0 ? `<span class="text-danger text-sm ml-2">-${p.discount_percent}%</span>` : ''}
+                    </td>
+                    <td>
+                        <span class="${p.stock_quantity > 10 ? 'text-success' : 'text-danger'}">${p.stock_quantity}</span>
+                    </td>
+                    <td>
+                        ${p.is_trending ? '<span class="badge badge-trending mr-1">Trending</span>' : ''}
+                        ${p.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
+                    </td>
+                    <td>
+                        <button class="btn-sm btn-edit mr-2" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        };
+
+        const filterProducts = () => {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const category = document.getElementById('filterCategory').value;
+            let filtered = allProducts;
+            if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search) || p.platform.toLowerCase().includes(search));
+            if (category) filtered = filtered.filter(p => p.category === category);
+            renderProducts(filtered);
+        };
+
+        // Modal Functions
+        const openProductModal = (product = null) => {
+            document.getElementById('modalTitle').textContent = product ? 'Edit Product' : 'Add Product';
+            document.getElementById('productId').value = product?.id || '';
+            document.getElementById('productName').value = product?.name || '';
+            document.getElementById('productPlatform').value = product?.platform || '';
+            document.getElementById('productCategory').value = product?.category || 'gaming';
+            document.getElementById('productPrice').value = product?.price_usd || '';
+            document.getElementById('productDiscount').value = product?.discount_percent || '0';
+            document.getElementById('productStock').value = product?.stock_quantity || '';
+            document.getElementById('productImage').value = product?.image_url || '';
+            document.getElementById('productDescription').value = product?.description || '';
+            document.getElementById('toggleTrending').classList.toggle('active', product?.is_trending || false);
+            document.getElementById('toggleFeatured').classList.toggle('active', product?.is_featured || false);
+            document.getElementById('productModal').classList.add('active');
+        };
+
+        const closeProductModal = () => document.getElementById('productModal').classList.remove('active');
+
+        // ============ UPLOAD CODES MODAL ============
+        const openUploadCodesModal = () => {
+            const select = document.getElementById('codeProductSelect');
+            select.innerHTML = '<option value="">Choose a product...</option>';
+            allProducts.forEach(p => {
+                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
+            });
+            document.getElementById('uploadCodesModal').classList.add('active');
+        };
+
+        const closeUploadCodesModal = () => {
+            document.getElementById('uploadCodesModal').classList.remove('active');
+            document.getElementById('uploadCodesForm').reset();
+        };
+
+        const handleUploadCodes = async (e) => {
+            e.preventDefault();
+            const productId = document.getElementById('codeProductSelect').value;
+            const fileInput = document.getElementById('codesFile');
+            const file = fileInput.files[0];
+
+            if (!productId || !file) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Please select a product and file' });
+                return;
+            }
+
+            showLoader();
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`/api/admin/products/${productId}/upload-codes`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.detail || 'Upload failed');
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Codes Uploaded!',
+                    text: `Successfully added ${data.codes_added} codes.`,
+                    timer: 1500,
+                    showConfirmButton: false
+                });
+                closeUploadCodesModal();
+                loadProducts();
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Upload Failed', text: error.message });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const editProduct = (id) => {
+            const product = allProducts.find(p => p.id === id);
+            if (product) openProductModal(product);
+        };
+
+        const deleteProduct = (id) => {
+            Swal.fire({
+                icon: 'warning', title: 'Delete Product?', text: 'This action cannot be undone.',
+                showCancelButton: true, confirmButtonColor: '#DC2626', confirmButtonText: 'Delete'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    allProducts = allProducts.filter(p => p.id !== id);
+                    renderProducts(allProducts);
+                    Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
+                }
+            });
+        };
+
+        const saveProduct = (e) => {
+            e.preventDefault();
+            Swal.fire({ icon: 'success', title: 'Product Saved!', timer: 1500, showConfirmButton: false });
+            closeProductModal();
+        };
+
+        // Close modal on overlay click
+        document.getElementById('productModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('productModal')) closeProductModal();
+        });
+        document.getElementById('uploadCodesModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('uploadCodesModal')) closeUploadCodesModal();
+        });
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => { if (checkAdminAuth()) loadProducts(); });
+    </script>
+</body>
+</html>
