@@ -27,16 +27,45 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; color: #1E293B; min-height: 100vh; display: flex; }
 
+        /* Dark Mode */
+        body.dark-mode { background-color: #0F172A; color: #E2E8F0; }
+        body.dark-mode .table-card, body.dark-mode .product-card { background: #1E293B; }
+        body.dark-mode .sidebar { background: #0F172A; border-right: 1px solid #334155; }
+        body.dark-mode .data-table th { background: #1E293B; }
+        body.dark-mode .data-table tr:hover td { background: #1E293B; }
+
         .progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, #2563EB, #3B82F6); z-index: 9999; }
         .progress-bar.loading { animation: progress 1.5s ease-in-out infinite; }
         @keyframes progress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
 
-        .sidebar { width: 260px; background: #1E293B; min-height: 100vh; padding: 24px 16px; position: fixed; left: 0; top: 0; z-index: 50; }
+        /* Mobile Header */
+        .mobile-header {
+            display: none; position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: #1E293B; color: white; z-index: 100; align-items: center;
+            justify-content: space-between; padding: 0 16px;
+        }
+        body.dark-mode .mobile-header { background: #0F172A; }
+        .mobile-header.visible { display: flex; }
+
+        .hamburger-btn {
+            background: none; border: none; color: white; font-size: 24px;
+            cursor: pointer; width: 44px; height: 44px; display: flex;
+            align-items: center; justify-content: center;
+        }
+
+        .sidebar { width: 260px; background: #1E293B; min-height: 100vh; padding: 24px 16px; position: fixed; left: 0; top: 0; z-index: 50; transition: transform 0.3s ease; }
+        @media (max-width: 767px) { .sidebar { transform: translateX(-100%); top: 60px; } .sidebar.mobile-open { transform: translateX(0); } }
+        
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+        .sidebar-overlay.visible { display: block; }
+        @media (max-width: 767px) { .sidebar-overlay.visible { display: block; } }
+
         .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94A3B8; text-decoration: none; border-radius: 10px; transition: all 0.2s; font-weight: 500; margin-bottom: 4px; }
         .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: #FFFFFF; }
         .sidebar-nav a.active { background: #2563EB; color: #FFFFFF; }
 
-        .main-content { margin-left: 260px; flex: 1; padding: 32px; }
+        .main-content { margin-left: 260px; flex: 1; padding: 32px; transition: margin-left 0.3s ease; }
+        @media (max-width: 767px) { .main-content { margin-left: 0; padding: 16px; margin-top: 60px; } }
 
         .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .data-table { width: 100%; border-collapse: collapse; }
@@ -75,13 +104,54 @@
         .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
         .badge-trending { background: #FEF3C7; color: #D97706; }
         .badge-featured { background: #DBEAFE; color: #2563EB; }
+
+        /* Mobile Product Cards */
+        .product-card {
+            display: none; background: #FFFFFF; border-radius: 12px; padding: 16px;
+            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        body.dark-mode .product-card { background: #1E293B; }
+        @media (max-width: 767px) { .product-card { display: block; } }
+        .product-card-header { display: flex; gap: 12px; margin-bottom: 12px; }
+        .product-card-image { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; }
+        .product-card-info { flex: 1; }
+        .product-card-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+        .product-card-meta { font-size: 12px; color: #94A3B8; margin-bottom: 4px; }
+        .product-card-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+        .product-card-label { font-size: 12px; color: #94A3B8; font-weight: 600; text-transform: uppercase; }
+        .product-card-value { font-size: 14px; font-weight: 600; }
+        .product-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+        .product-card-actions button { flex: 1; min-height: 40px; }
+
+        /* Hide tables on mobile */
+        @media (max-width: 767px) { .data-table { display: none; } }
     </style>
 </head>
 <body>
     <div class="progress-bar" id="progressBar"></div>
 
+    <!-- Mobile Header -->
+    <header class="mobile-header md:hidden">
+        <button class="hamburger-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="flex items-center gap-2 flex-1 ml-2">
+            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <i class="fas fa-key text-white text-sm"></i>
+            </div>
+            <span class="text-white font-bold">KeyVault</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center transition">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
     <!-- Sidebar -->
-    <aside class="sidebar">
+    <aside class="sidebar md:static" id="sidebar">
         <div class="flex items-center gap-3 mb-8 px-2">
             <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <i class="fas fa-key text-white"></i>
@@ -272,16 +342,31 @@
 
         const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
 
-        // Load Products
+        // Load Products from API
         const loadProducts = async () => {
-            allProducts = [
-                { id: 1, name: 'Xbox Game Pass Ultimate - 3 Months', platform: 'Xbox', category: 'gaming', price_usd: 44.99, discount_percent: 10, stock_quantity: 50, image_url: 'https://images.unsplash.com/photo-1621259182978-fbf93132d53d?w=100', is_trending: true, is_featured: true },
-                { id: 2, name: 'PlayStation Plus Premium - 12 Months', platform: 'PlayStation', category: 'gaming', price_usd: 59.99, discount_percent: 15, stock_quantity: 30, image_url: 'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=100', is_trending: true, is_featured: true },
-                { id: 3, name: 'Steam Wallet Card - $50', platform: 'Steam', category: 'gaming', price_usd: 50.00, discount_percent: 0, stock_quantity: 100, image_url: 'https://images.unsplash.com/photo-1511512578047-dfb367046420?w=100', is_trending: false, is_featured: true },
-                { id: 4, name: 'Spotify Premium - 6 Months', platform: 'Spotify', category: 'music', price_usd: 59.99, discount_percent: 20, stock_quantity: 75, image_url: 'https://images.unsplash.com/photo-1614680376593-902f74cf0d41?w=100', is_trending: true, is_featured: false },
-                { id: 5, name: 'Netflix Gift Card - $100', platform: 'Netflix', category: 'entertainment', price_usd: 100.00, discount_percent: 5, stock_quantity: 45, image_url: 'https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=100', is_trending: false, is_featured: true },
-            ];
-            renderProducts(allProducts);
+            showLoader();
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/products`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                
+                if (response.status === 401) {
+                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_user');
+                    window.location.href = 'index.html';
+                    return;
+                }
+                
+                allProducts = await response.json();
+                renderProducts(allProducts);
+            } catch (error) {
+                console.error('Failed to load products:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load products' });
+            } finally {
+                hideLoader();
+            }
         };
 
         const renderProducts = (products) => {
@@ -335,7 +420,8 @@
             document.getElementById('productPrice').value = product?.price_usd || '';
             document.getElementById('productDiscount').value = product?.discount_percent || '0';
             document.getElementById('productStock').value = product?.stock_quantity || '';
-            document.getElementById('productImage').value = product?.image_url || '';
+            // Note: Do NOT set productImage.value - file inputs cannot be set via JavaScript for security reasons
+            document.getElementById('productImage').value = '';
             document.getElementById('productDescription').value = product?.description || '';
             document.getElementById('toggleTrending').classList.toggle('active', product?.is_trending || false);
             document.getElementById('toggleFeatured').classList.toggle('active', product?.is_featured || false);
@@ -376,12 +462,20 @@
 
             try {
                 const token = localStorage.getItem('admin_token');
-                // This looks for the API on your FastAPI Backend (CORRECT)
+                // Upload codes to backend for the selected product
                 const response = await fetch(`${API_BASE}/api/admin/products/${productId}/upload-codes`, {
                     method: 'POST',
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
+
+                if (response.status === 401) {
+                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_user');
+                    window.location.href = 'index.html';
+                    return;
+                }
 
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Upload failed');
@@ -389,8 +483,8 @@
                 Swal.fire({
                     icon: 'success',
                     title: 'Codes Uploaded!',
-                    text: `Successfully added ${data.codes_added} codes.`,
-                    timer: 1500,
+                    text: `Successfully added ${data.codes_added} codes to this product.`,
+                    timer: 2000,
                     showConfirmButton: false
                 });
                 closeUploadCodesModal();
@@ -424,13 +518,20 @@
             e.preventDefault();
             
             const productId = document.getElementById('productId').value;
+            const productImageInput = document.getElementById('productImage');
+            
+            // For new products, image is required
+            if (!productId && productImageInput.files.length === 0) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Please select an image for the new product' });
+                return;
+            }
+            
             const productName = document.getElementById('productName').value;
             const productPlatform = document.getElementById('productPlatform').value;
             const productCategory = document.getElementById('productCategory').value;
             const productPrice = document.getElementById('productPrice').value;
             const productDiscount = document.getElementById('productDiscount').value || '0';
             const productStock = document.getElementById('productStock').value;
-            const productImageInput = document.getElementById('productImage');
             const productDescription = document.getElementById('productDescription').value;
             const isTrending = document.getElementById('toggleTrending').classList.contains('active');
             const isFeatured = document.getElementById('toggleFeatured').classList.contains('active');
@@ -439,7 +540,6 @@
             const formData = new FormData();
             formData.append('name', productName);
             formData.append('platform', productPlatform);
-            formData.append('category_id', productCategory || '');
             formData.append('price_usd', productPrice);
             formData.append('discount_percent', productDiscount);
             formData.append('stock_quantity', productStock);
@@ -447,9 +547,9 @@
             formData.append('is_trending', isTrending);
             formData.append('is_featured', isFeatured);
 
-            // Add image file if selected
+            // Add image file if selected - use 'file' key to match backend
             if (productImageInput.files.length > 0) {
-                formData.append('image', productImageInput.files[0]);
+                formData.append('file', productImageInput.files[0]);
             }
 
             showLoader();
@@ -464,14 +564,22 @@
                     body: formData
                 });
 
+                if (response.status === 401) {
+                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_user');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Save failed');
 
                 Swal.fire({
                     icon: 'success',
                     title: 'Product Saved!',
-                    text: productId ? 'Product updated successfully' : 'Product created successfully',
-                    timer: 1500,
+                    text: productId ? 'Product updated successfully' : 'Product created successfully. You can now upload codes if needed.',
+                    timer: 2000,
                     showConfirmButton: false
                 });
                 closeProductModal();
@@ -492,7 +600,58 @@
         });
 
         // Init
-        document.addEventListener('DOMContentLoaded', () => { if (checkAdminAuth()) loadProducts(); });
+        // Mobile & Theme Functions
+        const toggleSidebar = () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.toggle('mobile-open');
+            overlay.classList.toggle('visible');
+        };
+
+        const closeSidebar = () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.querySelector('.sidebar-overlay');
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('visible');
+        };
+
+        const toggleDarkMode = () => {
+            document.body.classList.toggle('dark-mode');
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateMoonIcon();
+        };
+
+        const updateMoonIcon = () => {
+            const isDarkMode = document.body.classList.contains('dark-mode');
+            const icons = document.querySelectorAll('[onclick="toggleDarkMode()"] i');
+            icons.forEach(icon => {
+                icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+            });
+        };
+
+        const updateMobileHeaderVisibility = () => {
+            const mobileHeader = document.querySelector('.mobile-header');
+            if (window.innerWidth < 768) {
+                mobileHeader.classList.add('visible');
+            } else {
+                mobileHeader.classList.remove('visible');
+            }
+        };
+
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { 
+            if (checkAdminAuth()) {
+                loadProducts();
+                updateMobileHeaderVisibility();
+                updateMoonIcon();
+            }
+        });
+
+        window.addEventListener('resize', updateMobileHeaderVisibility);
     </script>
 </body>
 </html>
