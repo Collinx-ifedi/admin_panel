@@ -3,12 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Banners - Admin - KeyVault</title>
+    <title>Blog Posts - Admin - KeyVault</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <!-- Quill.js for Rich Text Editor -->
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
 
     <script>
         tailwind.config = { theme: { extend: { colors: { primary: '#2563EB', secondary: '#1E293B', success: '#10B981', danger: '#EF4444' }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
@@ -18,16 +21,16 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; color: #1E293B; min-height: 100vh; display: flex; }
         
-        /* Dark Mode */
         body.dark-mode { background-color: #0F172A; color: #E2E8F0; }
-        body.dark-mode .banner-card, body.dark-mode .table-card { background: #1E293B; }
+        body.dark-mode .table-card, body.dark-mode .post-card { background: #1E293B; }
         body.dark-mode .sidebar { background: #0F172A; border-right: 1px solid #334155; }
+        body.dark-mode .data-table th { background: #1E293B; }
+        body.dark-mode .data-table tr:hover td { background: #1E293B; }
 
         .progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, #2563EB, #3B82F6); z-index: 9999; }
         .progress-bar.loading { animation: progress 1.5s ease-in-out infinite; }
         @keyframes progress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
 
-        /* Mobile Header */
         .mobile-header {
             display: none; position: fixed; top: 0; left: 0; right: 0; height: 60px;
             background: #1E293B; color: white; z-index: 100; align-items: center;
@@ -35,27 +38,31 @@
         }
         body.dark-mode .mobile-header { background: #0F172A; }
         .mobile-header.visible { display: flex; }
-
         .hamburger-btn {
             background: none; border: none; color: white; font-size: 24px;
             cursor: pointer; width: 44px; height: 44px; display: flex;
             align-items: center; justify-content: center;
         }
-
         .sidebar { width: 260px; background: #1E293B; min-height: 100vh; padding: 24px 16px; position: fixed; left: 0; top: 0; z-index: 50; transition: transform 0.3s ease; }
         @media (max-width: 767px) { .sidebar { transform: translateX(-100%); top: 60px; } .sidebar.mobile-open { transform: translateX(0); } }
-
         .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
         .sidebar-overlay.visible { display: block; }
         @media (max-width: 767px) { .sidebar-overlay.visible { display: block; } }
-
         .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94A3B8; text-decoration: none; border-radius: 10px; transition: all 0.2s; font-weight: 500; margin-bottom: 4px; }
         .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: #FFFFFF; }
         .sidebar-nav a.active { background: #2563EB; color: #FFFFFF; }
         .main-content { margin-left: 260px; flex: 1; padding: 32px; transition: margin-left 0.3s ease; }
         @media (max-width: 767px) { .main-content { margin-left: 0; padding: 16px; margin-top: 60px; } }
-        .banner-card { background: #FFFFFF; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
-        .banner-image { width: 100%; aspect-ratio: 21/9; object-fit: cover; }
+        .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table th { text-align: left; padding: 12px 16px; background: #F8FAFC; font-weight: 600; color: #64748B; font-size: 12px; text-transform: uppercase; }
+        .data-table th:first-child { border-radius: 8px 0 0 8px; }
+        .data-table th:last-child { border-radius: 0 8px 8px 0; }
+        .data-table td { padding: 16px; border-bottom: 1px solid #F1F5F9; }
+        .data-table tr:hover td { background: #FAFBFC; }
+        .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
+        .badge-draft { background: #FEF3C7; color: #D97706; }
+        .badge-published { background: #D1FAE5; color: #059669; }
         .btn-primary { padding: 10px 20px; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
         .btn-primary:hover { background: #1D4ED8; }
         .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
@@ -65,41 +72,25 @@
         .btn-delete:hover { background: #DC2626; color: white; }
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal { background: white; border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
+        .modal { background: white; border-radius: 20px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
+        body.dark-mode .modal { background: #1E293B; color: #E2E8F0; }
         .modal-overlay.active .modal { transform: scale(1); }
         .form-group { margin-bottom: 16px; }
         .form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
-        .form-input { width: 100%; padding: 12px 14px; border: 2px solid #E2E8F0; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
-        .form-input:focus { outline: none; border-color: #2563EB; }
+        .form-input, .form-textarea { width: 100%; padding: 12px 14px; border: 2px solid #E2E8F0; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
+        .form-input:focus, .form-textarea:focus { outline: none; border-color: #2563EB; }
+        .form-textarea { resize: vertical; min-height: 100px; }
         .toggle-switch { position: relative; width: 44px; height: 24px; background: #E2E8F0; border-radius: 12px; cursor: pointer; transition: all 0.2s; display: inline-block; }
-        .toggle-switch.active { background: #10B981; }
+        .toggle-switch.active { background: #2563EB; }
         .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
         .toggle-switch.active::after { left: 22px; }
-        .status-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
-        .status-dot.active { background: #10B981; }
-        .status-dot.inactive { background: #EF4444; }
-
-        /* Mobile Banner Cards */
-        .banner-card-info {
-            display: none; background: #FFFFFF; border-radius: 12px; padding: 16px;
-            margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        body.dark-mode .banner-card-info { background: #1E293B; }
-        @media (max-width: 767px) { 
-            .banner-card-info { display: block; }
-            .bannersGrid { grid-template-columns: 1fr !important; }
-        }
-        .banner-card-meta { font-size: 12px; color: #94A3B8; margin-bottom: 8px; }
-        .banner-card-title { font-weight: 600; font-size: 16px; margin-bottom: 8px; }
-        .banner-card-desc { font-size: 13px; color: #64748B; margin-bottom: 12px; }
-        .banner-card-actions { display: flex; gap: 8px; }
-        .banner-card-actions button { flex: 1; min-height: 40px; }
+        #editor { height: 300px; }
+        .ql-container { font-size: 14px; }
     </style>
 </head>
 <body>
     <div class="progress-bar" id="progressBar"></div>
 
-    <!-- Mobile Header -->
     <header class="mobile-header md:hidden">
         <button class="hamburger-btn" onclick="toggleSidebar()">
             <i class="fas fa-bars"></i>
@@ -128,9 +119,9 @@
             <a href="dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
             <a href="products.html"><i class="fas fa-box"></i> Products</a>
             <a href="orders.html"><i class="fas fa-shopping-bag"></i> Orders</a>
-            <a href="banners.html" class="active"><i class="fas fa-images"></i> Banners</a>
+            <a href="banners.html"><i class="fas fa-images"></i> Banners</a>
             <div style="margin: 12px 0; padding: 8px 16px; color: #64748B; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Blog</div>
-            <a href="blog-posts.html"><i class="fas fa-newspaper"></i> Posts</a>
+            <a href="blog-posts.html" class="active"><i class="fas fa-newspaper"></i> Posts</a>
             <a href="blog-comments.html"><i class="fas fa-comments"></i> Comments</a>
         </nav>
         <div class="absolute bottom-6 left-4 right-4">
@@ -143,62 +134,65 @@
     <main class="main-content">
         <div class="flex items-center justify-between mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-secondary">Homepage Banners</h1>
-                <p class="text-gray-500">Manage hero slider images</p>
+                <h1 class="text-2xl font-bold text-secondary">Blog Posts</h1>
+                <p class="text-gray-500">Manage your blog content</p>
             </div>
-            <button class="btn-primary" onclick="openBannerModal()">
-                <i class="fas fa-plus"></i> Add Banner
+            <button class="btn-primary" onclick="openPostModal()">
+                <i class="fas fa-plus"></i> New Post
             </button>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6" id="bannersGrid">
-            <!-- Rendered via JS -->
+        <div class="table-card">
+            <div class="overflow-x-auto">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Status</th>
+                            <th>Published</th>
+                            <th>Updated</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="postsTable"></tbody>
+                </table>
+            </div>
         </div>
     </main>
 
-    <!-- Banner Modal -->
-    <div class="modal-overlay" id="bannerModal">
+    <!-- Post Modal -->
+    <div class="modal-overlay" id="postModal">
         <div class="modal">
             <div class="p-6 border-b border-gray-100">
                 <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-secondary" id="bannerModalTitle">Add Banner</h2>
-                    <button onclick="closeBannerModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-times"></i></button>
+                    <h2 class="text-xl font-bold text-secondary" id="modalTitle">Create Post</h2>
+                    <button onclick="closePostModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-times"></i></button>
                 </div>
             </div>
-            <form id="bannerForm" class="p-6" onsubmit="saveBanner(event)">
-                <input type="hidden" id="bannerId">
-                <div class="form-group">
-                    <label class="form-label">Banner Image</label>
-                    <input type="file" id="bannerImage" class="form-input" accept="image/*" required>
-                    <p class="text-sm text-gray-500 mt-2">
-                        <i class="fas fa-info-circle"></i> Recommended: 21:9 aspect ratio. Supported formats: JPG, PNG, GIF, WebP
-                    </p>
-                </div>
+            <form id="postForm" class="p-6" onsubmit="savePost(event)">
+                <input type="hidden" id="postId">
                 <div class="form-group">
                     <label class="form-label">Title</label>
-                    <input type="text" id="bannerTitle" class="form-input" placeholder="Summer Sale!">
+                    <input type="text" id="postTitle" class="form-input" placeholder="Enter post title..." required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Subtitle</label>
-                    <input type="text" id="bannerSubtitle" class="form-input" placeholder="Up to 50% off">
+                    <label class="form-label">Featured Image URL</label>
+                    <input type="url" id="postImage" class="form-input" placeholder="https://...">
+                    <p class="text-sm text-gray-500 mt-1">Optional: URL of featured image</p>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Target Link</label>
-                    <input type="text" id="bannerLink" class="form-input" placeholder="/?filter=sale">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Button Text</label>
-                    <input type="text" id="bannerBtn" class="form-input" placeholder="Shop Now" value="Shop Now">
+                    <label class="form-label">Content</label>
+                    <div id="editor"></div>
                 </div>
                 <div class="form-group">
                     <label class="form-label flex items-center gap-3">
-                        <span class="toggle-switch active" id="toggleActive" onclick="this.classList.toggle('active')"></span>
-                        Active
+                        <span class="toggle-switch active" id="togglePublished" onclick="this.classList.toggle('active')"></span>
+                        Published
                     </label>
                 </div>
                 <div class="flex gap-4 mt-6">
-                    <button type="submit" class="btn-primary flex-1">Save Banner</button>
-                    <button type="button" onclick="closeBannerModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
+                    <button type="submit" class="btn-primary flex-1">Save Post</button>
+                    <button type="button" onclick="closePostModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
                 </div>
             </form>
         </div>
@@ -206,27 +200,39 @@
 
     <script>
         const API_BASE = 'https://e-commerce-project-msez.onrender.com';
-        let allBanners = [];
+        let allPosts = [];
+        let quill;
 
-        const checkAdminAuth = () => { 
-            if (!localStorage.getItem('admin_token')) { 
-                window.location.href = 'login.html'; 
-                return false; 
-            } 
-            return true; 
-        };
-        
-        const adminLogout = () => { 
-            localStorage.removeItem('admin_token'); 
-            localStorage.removeItem('admin_user'); 
-            window.location.href = 'index.html'; 
+        const checkAdminAuth = () => { if (!localStorage.getItem('admin_token')) { window.location.href = 'index.html'; return false; } return true; };
+        const adminLogout = () => { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href = 'index.html'; };
+        const showLoader = () => document.getElementById('progressBar').classList.add('loading');
+        const hideLoader = () => { document.getElementById('progressBar').classList.remove('loading'); document.getElementById('progressBar').style.width = '0%'; };
+        const formatDate = (dateStr) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateStr));
+
+        const initQuill = () => {
+            if (!quill) {
+                quill = new Quill('#editor', {
+                    theme: 'snow',
+                    placeholder: 'Write your post content...',
+                    modules: {
+                        toolbar: [
+                            [{ 'header': [1, 2, 3, false] }],
+                            ['bold', 'italic', 'underline', 'strike'],
+                            [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                            ['blockquote', 'code-block'],
+                            ['link', 'image'],
+                            ['clean']
+                        ]
+                    }
+                });
+            }
         };
 
-        const loadBanners = async () => {
+        const loadPosts = async () => {
             showLoader();
             try {
                 const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_BASE}/api/admin/banners`, {
+                const response = await fetch(`${API_BASE}/api/admin/blog/posts`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
 
@@ -239,74 +245,67 @@
                 }
 
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Failed to load banners');
+                if (!response.ok) throw new Error(data.detail || 'Failed to load posts');
                 
-                allBanners = data.banners || data || [];
-                renderBanners();
+                allPosts = data.posts || data || [];
+                renderPosts();
             } catch (error) {
-                console.error('Failed to load banners:', error);
-                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to load banners' });
+                console.error('Failed to load posts:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to load posts' });
             } finally {
                 hideLoader();
             }
         };
 
-        const renderBanners = () => {
-            document.getElementById('bannersGrid').innerHTML = allBanners.map(b => `
-                <div class="banner-card">
-                    <img src="${b.image_url}" alt="${b.title}" class="banner-image" onerror="this.src='https://images.unsplash.com/photo-1542751371-adc38448a05e?w=800'">
-                    <div class="p-4">
-                        <div class="flex items-center justify-between mb-2">
-                            <h3 class="font-semibold text-secondary">${b.title || 'Untitled Banner'}</h3>
-                            <span class="flex items-center gap-2 text-sm ${b.is_active ? 'text-success' : 'text-danger'}">
-                                <span class="status-dot ${b.is_active ? 'active' : 'inactive'}"></span>
-                                ${b.is_active ? 'Active' : 'Inactive'}
-                            </span>
-                        </div>
-                        <p class="text-sm text-gray-500 mb-4">${b.subtitle || ''}</p>
-                        <div class="flex gap-2">
-                            <button class="btn-sm btn-edit" onclick="editBanner(${b.id})"><i class="fas fa-edit mr-1"></i>Edit</button>
-                            <button class="btn-sm btn-delete" onclick="deleteBanner(${b.id})"><i class="fas fa-trash mr-1"></i>Delete</button>
-                        </div>
-                    </div>
-                </div>
+        const renderPosts = () => {
+            const tbody = document.getElementById('postsTable');
+            if (allPosts.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-gray-400">No blog posts yet. Create your first post!</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = allPosts.map(p => `
+                <tr>
+                    <td class="font-medium">${p.title}</td>
+                    <td><span class="badge ${p.is_published ? 'badge-published' : 'badge-draft'}">${p.is_published ? 'Published' : 'Draft'}</span></td>
+                    <td class="text-gray-500 text-sm">${formatDate(p.created_at)}</td>
+                    <td class="text-gray-500 text-sm">${p.updated_at ? formatDate(p.updated_at) : '-'}</td>
+                    <td>
+                        <button class="btn-sm btn-edit mr-2" onclick="editPost(${p.id})"><i class="fas fa-edit"></i></button>
+                        <button class="btn-sm btn-delete" onclick="deletePost(${p.id})"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
             `).join('');
         };
 
-        const openBannerModal = (banner = null) => {
-            document.getElementById('bannerModalTitle').textContent = banner ? 'Edit Banner' : 'Add Banner';
-            document.getElementById('bannerId').value = banner?.id || '';
-            // Note: Do NOT set bannerImage.value - file inputs cannot be set via JavaScript for security reasons
-            document.getElementById('bannerImage').value = '';
-            document.getElementById('bannerTitle').value = banner?.title || '';
-            document.getElementById('bannerSubtitle').value = banner?.subtitle || '';
-            document.getElementById('bannerLink').value = banner?.target_url || '';
-            document.getElementById('bannerBtn').value = banner?.btn_text || 'Shop Now';
-            document.getElementById('toggleActive').classList.toggle('active', banner?.is_active !== false);
-            document.getElementById('bannerModal').classList.add('active');
+        const openPostModal = (post = null) => {
+            initQuill();
+            document.getElementById('modalTitle').textContent = post ? 'Edit Post' : 'Create Post';
+            document.getElementById('postId').value = post?.id || '';
+            document.getElementById('postTitle').value = post?.title || '';
+            document.getElementById('postImage').value = post?.image_url || '';
+            quill.root.innerHTML = post?.content || '';
+            document.getElementById('togglePublished').classList.toggle('active', post?.is_published !== false);
+            document.getElementById('postModal').classList.add('active');
         };
 
-        const closeBannerModal = () => document.getElementById('bannerModal').classList.remove('active');
+        const closePostModal = () => document.getElementById('postModal').classList.remove('active');
 
-        const editBanner = (id) => {
-            const banner = allBanners.find(b => b.id === id);
-            if (banner) openBannerModal(banner);
+        const editPost = (id) => {
+            const post = allPosts.find(p => p.id === id);
+            if (post) openPostModal(post);
         };
 
-        const deleteBanner = (id) => {
+        const deletePost = (id) => {
             Swal.fire({
-                icon: 'warning', 
-                title: 'Delete Banner?', 
-                text: 'This will remove the banner from the homepage.',
-                showCancelButton: true, 
-                confirmButtonColor: '#DC2626', 
-                confirmButtonText: 'Delete'
+                icon: 'warning', title: 'Delete Post?', text: 'This action cannot be undone.',
+                showCancelButton: true, confirmButtonColor: '#DC2626', confirmButtonText: 'Delete'
             }).then(async (result) => {
                 if (result.isConfirmed) {
                     showLoader();
                     try {
                         const token = localStorage.getItem('admin_token');
-                        const response = await fetch(`${API_BASE}/api/admin/banners/${id}`, {
+                        const response = await fetch(`${API_BASE}/api/admin/blog/posts/${id}`, {
                             method: 'DELETE',
                             headers: { 'Authorization': `Bearer ${token}` }
                         });
@@ -325,7 +324,7 @@
                         }
 
                         await Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
-                        loadBanners();
+                        loadPosts();
                     } catch (error) {
                         Swal.fire({ icon: 'error', title: 'Delete Failed', text: error.message });
                     } finally {
@@ -335,53 +334,35 @@
             });
         };
 
-        const showLoader = () => document.getElementById('progressBar').classList.add('loading');
-        const hideLoader = () => { 
-            document.getElementById('progressBar').classList.remove('loading'); 
-            document.getElementById('progressBar').style.width = '0%'; 
-        };
-
-        const saveBanner = async (e) => {
+        const savePost = async (e) => {
             e.preventDefault();
             
-            const id = document.getElementById('bannerId').value;
-            const imageInput = document.getElementById('bannerImage');
+            const postId = document.getElementById('postId').value;
+            const title = document.getElementById('postTitle').value;
+            const imageUrl = document.getElementById('postImage').value;
+            const content = quill.root.innerHTML;
+            const isPublished = document.getElementById('togglePublished').classList.contains('active');
 
-            // For new banners, image is required
-            if (!id && imageInput.files.length === 0) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Please select an image for the new banner' });
-                return;
-            }
-
-            const title = document.getElementById('bannerTitle').value;
-            const subtitle = document.getElementById('bannerSubtitle').value;
-            const link = document.getElementById('bannerLink').value;
-            const btnText = document.getElementById('bannerBtn').value;
-            const isActive = document.getElementById('toggleActive').classList.contains('active');
-
-            // Build FormData with all fields
-            const formData = new FormData();
-            formData.append('title', title);
-            formData.append('subtitle', subtitle);
-            formData.append('target_url', link);
-            formData.append('btn_text', btnText);
-            formData.append('is_active', isActive);
-
-            // Add image file if selected - use 'file' key to match backend
-            if (imageInput.files.length > 0) {
-                formData.append('file', imageInput.files[0]);
-            }
+            const payload = {
+                title,
+                content,
+                image_url: imageUrl || null,
+                is_published: isPublished
+            };
 
             showLoader();
             try {
                 const token = localStorage.getItem('admin_token');
-                const method = id ? 'PUT' : 'POST';
-                const endpoint = id ? `/api/admin/banners/${id}` : '/api/admin/banners';
+                const method = postId ? 'PUT' : 'POST';
+                const endpoint = postId ? `/api/admin/blog/posts/${postId}` : '/api/admin/blog/posts';
                 
                 const response = await fetch(`${API_BASE}${endpoint}`, {
                     method: method,
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
                 });
 
                 if (response.status === 401) {
@@ -393,17 +374,17 @@
                 }
 
                 const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Failed to save banner');
+                if (!response.ok) throw new Error(data.detail || 'Save failed');
 
                 Swal.fire({
                     icon: 'success',
-                    title: 'Banner Saved!',
-                    text: id ? 'Banner updated successfully' : 'Banner created successfully',
-                    timer: 1500,
+                    title: 'Post Saved!',
+                    text: postId ? 'Post updated successfully' : 'Post created successfully',
+                    timer: 2000,
                     showConfirmButton: false
                 });
-                closeBannerModal();
-                loadBanners();
+                closePostModal();
+                loadPosts();
             } catch (error) {
                 Swal.fire({ icon: 'error', title: 'Save Failed', text: error.message });
             } finally {
@@ -411,12 +392,6 @@
             }
         };
 
-        // Close modal on backdrop click
-        document.getElementById('bannerModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('bannerModal')) closeBannerModal();
-        });
-
-        // Mobile & Theme Functions
         const toggleSidebar = () => {
             const sidebar = document.getElementById('sidebar');
             const overlay = document.querySelector('.sidebar-overlay');
@@ -459,16 +434,19 @@
             document.body.classList.add('dark-mode');
         }
 
-        // Init
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', () => { 
             if (checkAdminAuth()) {
-                loadBanners();
+                loadPosts();
                 updateMobileHeaderVisibility();
                 updateMoonIcon();
             }
         });
 
         window.addEventListener('resize', updateMobileHeaderVisibility);
+
+        document.getElementById('postModal').addEventListener('click', (e) => {
+            if (e.target === document.getElementById('postModal')) closePostModal();
+        });
     </script>
 </body>
 </html>

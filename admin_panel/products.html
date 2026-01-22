@@ -163,6 +163,9 @@
             <a href="products.html" class="active"><i class="fas fa-box"></i> Products</a>
             <a href="orders.html"><i class="fas fa-shopping-bag"></i> Orders</a>
             <a href="banners.html"><i class="fas fa-images"></i> Banners</a>
+            <div style="margin: 12px 0; padding: 8px 16px; color: #64748B; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Blog</div>
+            <a href="blog-posts.html"><i class="fas fa-newspaper"></i> Posts</a>
+            <a href="blog-comments.html"><i class="fas fa-comments"></i> Comments</a>
         </nav>
         <div class="absolute bottom-6 left-4 right-4">
             <button onclick="adminLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
@@ -274,13 +277,16 @@
                         <input type="text" id="productPlatform" class="form-input" placeholder="e.g. Steam, Xbox, PlayStation, Spotify..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Category</label>
-                        <select id="productCategory" class="form-select">
-                            <option value="gaming">Gaming</option>
-                            <option value="music">Music</option>
-                            <option value="vouchers">Gift Cards</option>
-                            <option value="entertainment">Entertainment</option>
+                        <label class="form-label">Product Category</label>
+                        <select id="productCategory" class="form-select" required onchange="togglePlayerIdField()">
+                            <option value="gift_cards">Gift Cards</option>
+                            <option value="games">Games</option>
+                            <option value="direct_topup">Direct Top-up</option>
+                            <option value="others">Others</option>
                         </select>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <i class="fas fa-info-circle"></i> Determines delivery method
+                        </p>
                     </div>
                     <div class="form-group">
                         <label class="form-label">Price (USD)</label>
@@ -304,6 +310,15 @@
                     <div class="form-group col-span-2">
                         <label class="form-label">Description</label>
                         <textarea id="productDescription" class="form-textarea" placeholder="Product description..."></textarea>
+                    </div>
+                    <div class="form-group" id="playerIdToggleContainer" style="display: none;">
+                        <label class="form-label flex items-center gap-3">
+                            <span class="toggle-switch" id="togglePlayerID" onclick="this.classList.toggle('active')"></span>
+                            Requires Player ID
+                        </label>
+                        <p class="text-sm text-gray-500 mt-1">
+                            <i class="fas fa-info-circle"></i> Enable for direct top-ups requiring user/player ID
+                        </p>
                     </div>
                     <div class="form-group">
                         <label class="form-label flex items-center gap-3">
@@ -414,13 +429,27 @@
             renderProducts(filtered);
         };
 
+        // Toggle Player ID field visibility based on category
+        const togglePlayerIdField = () => {
+            const category = document.getElementById('productCategory').value;
+            const playerIdContainer = document.getElementById('playerIdToggleContainer');
+            const playerIdToggle = document.getElementById('togglePlayerID');
+            
+            if (category === 'direct_topup') {
+                playerIdContainer.style.display = 'block';
+            } else {
+                playerIdContainer.style.display = 'none';
+                playerIdToggle.classList.remove('active'); // Reset toggle if not direct_topup
+            }
+        };
+
         // Modal Functions
         const openProductModal = (product = null) => {
             document.getElementById('modalTitle').textContent = product ? 'Edit Product' : 'Add Product';
             document.getElementById('productId').value = product?.id || '';
             document.getElementById('productName').value = product?.name || '';
             document.getElementById('productPlatform').value = product?.platform || '';
-            document.getElementById('productCategory').value = product?.category || 'gaming';
+            document.getElementById('productCategory').value = product?.product_category || 'others';
             document.getElementById('productPrice').value = product?.price_usd || '';
             document.getElementById('productDiscount').value = product?.discount_percent || '0';
             document.getElementById('productStock').value = product?.stock_quantity || '';
@@ -429,6 +458,11 @@
             document.getElementById('productDescription').value = product?.description || '';
             document.getElementById('toggleTrending').classList.toggle('active', product?.is_trending || false);
             document.getElementById('toggleFeatured').classList.toggle('active', product?.is_featured || false);
+            document.getElementById('togglePlayerID').classList.toggle('active', product?.requires_player_id || false);
+            
+            // Show/hide Player ID field based on category
+            togglePlayerIdField();
+            
             document.getElementById('productModal').classList.add('active');
         };
 
@@ -564,11 +598,14 @@
             const productDescription = document.getElementById('productDescription').value;
             const isTrending = document.getElementById('toggleTrending').classList.contains('active');
             const isFeatured = document.getElementById('toggleFeatured').classList.contains('active');
+            const requiresPlayerId = document.getElementById('togglePlayerID').classList.contains('active');
 
             // Build FormData with all fields
             const formData = new FormData();
             formData.append('name', productName);
             formData.append('platform', productPlatform);
+            formData.append('product_category', productCategory); // Use product_category enum
+            formData.append('requires_player_id', requiresPlayerId); // New field
             formData.append('price_usd', productPrice);
             formData.append('discount_percent', productDiscount);
             formData.append('stock_quantity', productStock);
