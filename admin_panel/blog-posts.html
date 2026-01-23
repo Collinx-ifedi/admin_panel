@@ -338,10 +338,19 @@
             e.preventDefault();
             
             const postId = document.getElementById('postId').value;
-            const title = document.getElementById('postTitle').value;
+            let title = document.getElementById('postTitle').value.trim();
             const imageUrl = document.getElementById('postImage').value;
-            const content = quill.root.innerHTML;
+            let content = quill.root.innerHTML.trim();
             const isPublished = document.getElementById('togglePublished').classList.contains('active');
+
+            // Prevent null inputs - assign defaults if empty
+            if (!title || title === '') {
+                title = 'Untitled Post';
+            }
+            
+            if (!content || content === '' || content === '<p><br></p>' || content === '<p></p>') {
+                content = 'No content provided';
+            }
 
             const payload = {
                 title,
@@ -349,6 +358,9 @@
                 image_url: imageUrl || null,
                 is_published: isPublished
             };
+
+            // Debug logging to verify payload before sending
+            console.log('[v0] Payload:', payload);
 
             showLoader();
             try {
