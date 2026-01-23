@@ -75,7 +75,8 @@
         .main-content { margin-left: 260px; flex: 1; padding: 32px; transition: margin-left 0.3s ease; }
         @media (max-width: 767px) { .main-content { margin-left: 0; padding: 16px; margin-top: 60px; } }
 
-        .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-height: auto; max-height: none; }
+        @media (max-width: 767px) { .table-card { padding: 16px; overflow: visible; } }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th { text-align: left; padding: 12px 16px; background: #F8FAFC; font-weight: 600; color: #64748B; font-size: 12px; text-transform: uppercase; }
         .data-table th:first-child { border-radius: 8px 0 0 8px; }
@@ -91,6 +92,11 @@
         .btn-edit:hover { background: #2563EB; color: white; }
         .btn-delete { background: #FEF2F2; color: #DC2626; }
         .btn-delete:hover { background: #DC2626; color: white; }
+        
+        /* Mobile card buttons - larger touch targets */
+        @media (max-width: 767px) {
+            .product-card-actions .btn-sm { padding: 12px 16px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
@@ -115,11 +121,10 @@
 
         /* Mobile Product Cards */
         .product-card {
-            display: none; background: #FFFFFF; border-radius: 12px; padding: 16px;
+            background: #FFFFFF; border-radius: 12px; padding: 16px;
             margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         body.dark-mode .product-card { background: #1E293B; }
-        @media (max-width: 767px) { .product-card { display: block; } }
         .product-card-header { display: flex; gap: 12px; margin-bottom: 12px; }
         .product-card-image { width: 80px; height: 60px; border-radius: 8px; object-fit: cover; }
         .product-card-info { flex: 1; }
@@ -131,13 +136,6 @@
         .product-card-value { font-size: 14px; font-weight: 600; color: #1E293B; }
         body.dark-mode .product-card-value { color: #E2E8F0; }
         .product-card-actions { display: flex; gap: 8px; margin-top: 12px; }
-        .product-card-actions button { flex: 1; min-height: 40px; }
-
-        /* Mobile Product Container with Overflow */
-        @media (max-width: 767px) { 
-            .data-table { display: none; }
-            .table-card { padding: 16px; min-height: auto; max-height: none; overflow: visible; }
-        }
     </style>
 </head>
 <body>
@@ -214,7 +212,8 @@
                     <option value="vouchers">Gift Cards</option>
                 </select>
             </div>
-            <div class="overflow-x-auto">
+            <!-- Desktop Table View -->
+            <div class="overflow-x-auto hidden md:block">
                 <table class="data-table">
                     <thead>
                         <tr>
@@ -230,6 +229,10 @@
                         <!-- Rendered via JS -->
                     </tbody>
                 </table>
+            </div>
+            <!-- Mobile Card View -->
+            <div id="productsMobileList" class="block md:hidden">
+                <!-- Rendered via JS -->
             </div>
         </div>
     </main>
@@ -402,6 +405,7 @@
         };
 
         const renderProducts = (products) => {
+            // Render Desktop Table
             document.getElementById('productsTable').innerHTML = products.map(p => `
                 <tr>
                     <td>
@@ -430,6 +434,40 @@
                         <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
+            `).join('');
+
+            // Render Mobile Cards
+            document.getElementById('productsMobileList').innerHTML = products.map(p => `
+                <div class="product-card">
+                    <div class="product-card-header">
+                        <img src="${p.image_url}" alt="${p.name}" class="product-card-image" onerror="this.src='https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=100'">
+                        <div class="product-card-info">
+                            <p class="product-card-title">${p.name}</p>
+                            <p class="product-card-meta">${p.platform}</p>
+                        </div>
+                    </div>
+                    <div class="product-card-row">
+                        <span class="product-card-label">Price</span>
+                        <span class="product-card-value">${formatCurrency(p.price_usd)}${p.discount_percent > 0 ? ` <span class="text-danger text-xs">-${p.discount_percent}%</span>` : ''}</span>
+                    </div>
+                    <div class="product-card-row">
+                        <span class="product-card-label">Stock</span>
+                        <span class="product-card-value ${p.stock_quantity > 10 ? 'text-success' : 'text-danger'}">${p.stock_quantity}</span>
+                    </div>
+                    ${p.is_trending || p.is_featured ? `
+                    <div class="product-card-row">
+                        <span class="product-card-label">Tags</span>
+                        <span>
+                            ${p.is_trending ? '<span class="badge badge-trending mr-1">Trending</span>' : ''}
+                            ${p.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
+                        </span>
+                    </div>
+                    ` : ''}
+                    <div class="product-card-actions">
+                        <button class="btn-sm btn-edit" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
             `).join('');
         };
 
