@@ -371,6 +371,8 @@
     </div>
 
     <script>
+        console.log("[v0] products.html JS STARTED");
+        
         const API_BASE = 'https://e-commerce-project-msez.onrender.com';
         let allProducts = [];
         let currentProductId = null;
@@ -378,16 +380,28 @@
 
         const checkAdminAuth = () => { if (!localStorage.getItem('admin_token')) { window.location.href = 'index.html'; return false; } return true; };
         const adminLogout = () => { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href = 'index.html'; };
-        const showLoader = () => document.getElementById('progressBar').classList.add('loading');
-        const hideLoader = () => { document.getElementById('progressBar').classList.remove('loading'); document.getElementById('progressBar').style.width = '0%'; };
+        const showLoader = () => { const el = document.getElementById('progressBar'); if (el) el.classList.add('loading'); };
+        const hideLoader = () => { const el = document.getElementById('progressBar'); if (el) { el.classList.remove('loading'); el.style.width = '0%'; } };
         const toggleDarkMode = () => document.body.classList.toggle('dark-mode');
-        const toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('mobile-open'); document.getElementById('sidebarOverlay').classList.toggle('visible'); };
-        const closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); };
+        const toggleSidebar = () => { 
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.toggle('mobile-open');
+            if (overlay) overlay.classList.toggle('visible');
+        };
+        const closeSidebar = () => { 
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            if (sidebar) sidebar.classList.remove('mobile-open');
+            if (overlay) overlay.classList.remove('visible');
+        };
         const formatDate = (dateStr) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateStr));
 
-        if (!checkAdminAuth()) return;
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[v0] products.html DOMContentLoaded fired");
+                if (!checkAdminAuth()) return;
 
-        const loadProducts = async () => {
+            const loadProducts = async () => {
             showLoader();
             try {
                 const token = localStorage.getItem('admin_token');
@@ -718,8 +732,10 @@
             }
         };
 
-        // Initialize
-        loadProducts();
+            // Initialize
+            loadProducts();
+            console.log("[v0] products.html JS COMPLETED");
+        });
     </script>
 </body>
 </html>
