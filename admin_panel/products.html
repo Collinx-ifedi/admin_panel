@@ -397,11 +397,18 @@
         };
         const formatDate = (dateStr) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateStr));
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("[v0] products.html DOMContentLoaded fired");
-                if (!checkAdminAuth()) return;
+        const updateMobileHeaderVisibility = () => {
+            const mobileHeader = document.querySelector('.mobile-header');
+            if (mobileHeader) {
+                if (window.innerWidth < 768) {
+                    mobileHeader.classList.add('visible');
+                } else {
+                    mobileHeader.classList.remove('visible');
+                }
+            }
+        };
 
-            const loadProducts = async () => {
+        const loadProducts = async () => {
             showLoader();
             try {
                 const token = localStorage.getItem('admin_token');
@@ -732,8 +739,14 @@
             }
         };
 
-            // Initialize
-            loadProducts();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[v0] products.html DOMContentLoaded fired");
+            updateMobileHeaderVisibility();
+            window.addEventListener('resize', updateMobileHeaderVisibility);
+            if (checkAdminAuth()) {
+                loadProducts();
+            }
             console.log("[v0] products.html JS COMPLETED");
         });
     </script>

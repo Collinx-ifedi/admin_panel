@@ -232,11 +232,18 @@
             if (overlay) overlay.classList.remove('visible');
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("[v0] orders.html DOMContentLoaded fired");
-            if (!checkAdminAuth()) return;
+        const updateMobileHeaderVisibility = () => {
+            const mobileHeader = document.querySelector('.mobile-header');
+            if (mobileHeader) {
+                if (window.innerWidth < 768) {
+                    mobileHeader.classList.add('visible');
+                } else {
+                    mobileHeader.classList.remove('visible');
+                }
+            }
+        };
 
-            const loadOrders = async () => {
+        const loadOrders = async () => {
             showLoader();
             try {
                 const token = localStorage.getItem('admin_token');
@@ -429,8 +436,14 @@
             });
         };
 
-            // Initialize
-            loadOrders();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[v0] orders.html DOMContentLoaded fired");
+            updateMobileHeaderVisibility();
+            window.addEventListener('resize', updateMobileHeaderVisibility);
+            if (checkAdminAuth()) {
+                loadOrders();
+            }
             console.log("[v0] orders.html JS COMPLETED");
         });
     </script>

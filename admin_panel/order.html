@@ -250,11 +250,18 @@
             if (overlay) overlay.classList.remove('visible');
         };
 
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("[v0] order.html DOMContentLoaded fired");
-            if (!checkAdminAuth()) return;
+        const updateMobileHeaderVisibility = () => {
+            const mobileHeader = document.querySelector('.mobile-header');
+            if (mobileHeader) {
+                if (window.innerWidth < 768) {
+                    mobileHeader.classList.add('visible');
+                } else {
+                    mobileHeader.classList.remove('visible');
+                }
+            }
+        };
 
-            const getOrderIdFromURL = () => {
+        const getOrderIdFromURL = () => {
             const params = new URLSearchParams(window.location.search);
             return params.get('id');
         };
@@ -423,8 +430,14 @@
             });
         };
 
-            // Initialize
-            loadOrderDetails();
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("[v0] order.html DOMContentLoaded fired");
+            updateMobileHeaderVisibility();
+            window.addEventListener('resize', updateMobileHeaderVisibility);
+            if (checkAdminAuth()) {
+                loadOrderDetails();
+            }
             console.log("[v0] order.html JS COMPLETED");
         });
     </script>
