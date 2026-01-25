@@ -106,8 +106,9 @@
         
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal { background: white; border-radius: 20px; max-width: 600px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
+        .modal { background: white; border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
         .modal-overlay.active .modal { transform: scale(1); }
+        body.dark-mode .modal { background: #1E293B; }
     </style>
 </head>
 <body>
@@ -131,7 +132,7 @@
         </div>
     </header>
 
-    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <aside class="sidebar md:static" id="sidebar">
         <div class="flex items-center gap-3 mb-8 px-2">
@@ -158,7 +159,7 @@
         <div class="flex items-center justify-between mb-8">
             <div>
                 <h1 class="text-2xl font-bold text-secondary">Orders</h1>
-                <p class="text-gray-500">Manage customer orders</p>
+                <p class="text-gray-500">View and manage customer orders</p>
             </div>
         </div>
 
@@ -166,10 +167,10 @@
             <div class="flex items-center gap-3 mb-6 flex-wrap">
                 <button class="filter-btn active" onclick="filterOrders('all', this)">All</button>
                 <button class="filter-btn" onclick="filterOrders('pending', this)">Pending</button>
+                <button class="filter-btn" onclick="filterOrders('paid', this)">Paid</button>
                 <button class="filter-btn" onclick="filterOrders('in_progress', this)">Awaiting Fulfillment</button>
                 <button class="filter-btn" onclick="filterOrders('completed', this)">Completed</button>
                 <button class="filter-btn" onclick="filterOrders('cancelled', this)">Cancelled</button>
-                <button class="filter-btn" onclick="filterOrders('rejected', this)">Rejected</button>
             </div>
             <div class="overflow-x-auto">
                 <table class="data-table">
@@ -177,7 +178,8 @@
                         <tr>
                             <th>Order Ref</th>
                             <th>Customer</th>
-                            <th>Amount</th>
+                            <th>Items</th>
+                            <th>Total</th>
                             <th>Status</th>
                             <th>Date</th>
                             <th>Actions</th>
@@ -186,6 +188,8 @@
                     <tbody id="ordersTable"></tbody>
                 </table>
             </div>
+            <!-- Mobile Cards -->
+            <div id="ordersMobileList" class="block md:hidden"></div>
         </div>
     </main>
 
@@ -202,21 +206,6 @@
         </div>
     </div>
 
-    <!-- Fulfillment Modal -->
-    <div class="modal-overlay" id="fulfillmentModal">
-        <div class="modal">
-            <div class="p-6 border-b border-gray-100">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-secondary">Fulfill Order</h2>
-                    <button onclick="closeFulfillmentModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200"><i class="fas fa-times"></i></button>
-                </div>
-            </div>
-            <div class="p-6">
-                <div id="fulfillmentContent"></div>
-            </div>
-        </div>
-    </div>
-
     <script>
         const API_BASE = 'https://e-commerce-project-msez.onrender.com';
         let allOrders = [];
@@ -227,6 +216,11 @@
         const hideLoader = () => { document.getElementById('progressBar').classList.remove('loading'); document.getElementById('progressBar').style.width = '0%'; };
         const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
         const formatDate = (dateStr) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateStr));
+        const toggleDarkMode = () => document.body.classList.toggle('dark-mode');
+        const toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('mobile-open'); document.getElementById('sidebarOverlay').classList.toggle('visible'); };
+        const closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); };
+
+        if (!checkAdminAuth()) return;
 
         const loadOrders = async () => {
             showLoader();
@@ -237,17 +231,15 @@
                 });
 
                 if (response.status === 401) {
-                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
-                    window.location.href = 'index.html';
+                    adminLogout();
                     return;
                 }
 
                 const data = await response.json();
                 if (!response.ok) throw new Error(data.detail || 'Failed to load orders');
                 
-                allOrders = data.orders || data || [];
+                // Handle both array and object response
+                allOrders = Array.isArray(data) ? data : (data.orders || []);
                 renderOrders(allOrders);
             } catch (error) {
                 console.error('Failed to load orders:', error);
@@ -258,16 +250,51 @@
         };
 
         const renderOrders = (orders) => {
-            document.getElementById('ordersTable').innerHTML = orders.map(o => `
+            // Desktop table
+            const tableHtml = orders.map(o => `
                 <tr>
                     <td class="font-medium">${o.order_reference || o.id}</td>
                     <td class="text-gray-500">${o.user?.email || o.email || 'N/A'}</td>
+                    <td class="text-center">${(o.items || []).length}</td>
                     <td class="font-semibold">${formatCurrency(o.total_amount_usd)}</td>
-                    <td><span class="status-badge ${o.status}">${o.status.charAt(0).toUpperCase() + o.status.slice(1)}</span></td>
+                    <td><span class="status-badge ${o.status}">${o.status.charAt(0).toUpperCase() + o.status.slice(1).replace('_', ' ')}</span></td>
                     <td class="text-gray-500 text-sm">${formatDate(o.created_at)}</td>
                     <td><button class="btn-sm" onclick="viewOrder('${o.order_reference || o.id}')"><i class="fas fa-eye mr-1"></i>View</button></td>
                 </tr>
             `).join('');
+            document.getElementById('ordersTable').innerHTML = tableHtml;
+
+            // Mobile cards
+            const cardsHtml = orders.map(o => `
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <span class="order-card-ref">${o.order_reference || o.id}</span>
+                        <span class="status-badge ${o.status}">${o.status.toUpperCase().replace('_', ' ')}</span>
+                    </div>
+                    <div class="order-card-row">
+                        <span class="order-card-label">Customer</span>
+                        <span class="order-card-value">${o.user?.email || o.email || 'N/A'}</span>
+                    </div>
+                    <div class="order-card-row">
+                        <span class="order-card-label">Items</span>
+                        <span class="order-card-value">${(o.items || []).length}</span>
+                    </div>
+                    <div class="order-card-row">
+                        <span class="order-card-label">Total</span>
+                        <span class="order-card-amount">${formatCurrency(o.total_amount_usd)}</span>
+                    </div>
+                    <div class="order-card-row">
+                        <span class="order-card-label">Date</span>
+                        <span class="order-card-value">${formatDate(o.created_at)}</span>
+                    </div>
+                    <div class="order-card-actions">
+                        <button class="btn-sm" onclick="viewOrder('${o.order_reference || o.id}')" style="flex: 1;">
+                            <i class="fas fa-eye"></i> View
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('ordersMobileList').innerHTML = cardsHtml;
         };
 
         const filterOrders = (status, btn) => {
@@ -281,327 +308,114 @@
             const order = allOrders.find(o => (o.order_reference || o.id) === ref || o.order_reference === ref);
             if (!order) return;
             
-            // Check if order needs fulfillment
-            const canFulfill = order.status === 'in_progress' || order.status === 'paid';
-            const playerIdInfo = order.order_metadata?.player_id ? `
-                <div><p class="text-sm text-gray-500">Player ID</p><p class="font-medium">${order.order_metadata.player_id}</p></div>
-            ` : '';
-            
-            const fulfillButton = canFulfill ? `
-                <button class="btn-primary w-full mt-4" onclick="openFulfillmentModal('${order.order_reference || order.id}')">
-                    <i class="fas fa-check-circle"></i> Fulfill Order
-                </button>
-            ` : '';
-            
+            const items = (order.items || []);
+            const itemsHtml = items.map(i => `
+                <div class="flex justify-between p-3 bg-gray-50 rounded-lg mb-2">
+                    <div style="flex: 1;">
+                        <div class="font-medium">${i.product_name || 'Unknown Product'}</div>
+                        <div class="text-sm text-gray-500">${i.variant_label_snapshot || i.denomination?.label || 'N/A'}</div>
+                    </div>
+                    <div class="text-right">
+                        <div class="font-semibold">${formatCurrency(i.unit_price_at_purchase)}</div>
+                        <div class="text-sm text-gray-500">Qty: ${i.quantity || 1}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            let actionButtons = '';
+            if (order.status === 'in_progress' || order.status === 'paid') {
+                actionButtons = `
+                    <button class="btn-primary w-full mt-4" onclick="fulfillOrder('${order.order_reference || order.id}')">
+                        <i class="fas fa-check-circle"></i> Fulfill Order
+                    </button>
+                `;
+            } else if (order.status === 'completed') {
+                actionButtons = `
+                    <button class="btn-primary w-full mt-4" onclick="resendCodes('${order.order_reference || order.id}')" style="background: #10B981;">
+                        <i class="fas fa-redo"></i> Resend Codes
+                    </button>
+                `;
+            }
+
             document.getElementById('orderModalContent').innerHTML = `
                 <div class="space-y-6">
                     <div class="flex justify-between items-start">
                         <div><p class="text-sm text-gray-500">Reference</p><p class="text-xl font-bold">${order.order_reference || order.id}</p></div>
-                        <span class="status-badge ${order.status}">${order.status.charAt(0).toUpperCase() + order.status.slice(1).replace('_', ' ')}</span>
+                        <span class="status-badge ${order.status}">${order.status.toUpperCase().replace('_', ' ')}</span>
                     </div>
                     <div class="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded-xl">
                         <div><p class="text-sm text-gray-500">Customer</p><p class="font-medium">${order.user?.email || order.email || 'N/A'}</p></div>
-                        <div><p class="text-sm text-gray-500">IP Address</p><p class="font-medium">${order.customer_ip || order.ip || 'N/A'}</p></div>
-                        ${playerIdInfo}
+                        <div><p class="text-sm text-gray-500">Payment Method</p><p class="font-medium">${order.payment_method || 'N/A'}</p></div>
                         <div><p class="text-sm text-gray-500">Date</p><p class="font-medium">${formatDate(order.created_at)}</p></div>
                         <div><p class="text-sm text-gray-500">Total</p><p class="font-bold text-primary">${formatCurrency(order.total_amount_usd)}</p></div>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-500 mb-3">Items</p>
-                        ${(order.items || []).map(i => `<div class="flex justify-between p-3 bg-gray-50 rounded-lg mb-2"><span>${i.product_name} x${i.quantity}</span><span class="font-semibold">${formatCurrency(i.unit_price_at_purchase * i.quantity)}</span></div>`).join('') || '<p class="text-gray-400 text-sm">No items</p>'}
+                        <p class="text-sm text-gray-500 mb-3">Items (${items.length})</p>
+                        ${itemsHtml || '<p class="text-gray-400 text-sm">No items</p>'}
                     </div>
-                    ${fulfillButton}
+                    ${actionButtons}
                 </div>
             `;
             document.getElementById('orderModal').classList.add('active');
         };
 
-        const closeOrderModal = () => document.getElementById('orderModal').classList.remove('active');
-        document.getElementById('orderModal').addEventListener('click', (e) => { if (e.target === document.getElementById('orderModal')) closeOrderModal(); });
+        const closeOrderModal = () => {
+            document.getElementById('orderModal').classList.remove('active');
+        };
 
-        // Fulfillment Modal Functions
-        let currentFulfillOrder = null;
-        let selectedCodes = [];
-
-        const openFulfillmentModal = async (orderRef) => {
+        const fulfillOrder = async (orderRef) => {
             const order = allOrders.find(o => (o.order_reference || o.id) === orderRef);
             if (!order) return;
-            
-            currentFulfillOrder = order;
-            selectedCodes = [];
-            
-            closeOrderModal(); // Close order details modal
-            
-            // Determine product category to show appropriate fulfillment UI
-            const firstItem = order.items?.[0];
-            if (!firstItem) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Order has no items' });
-                return;
-            }
-            
+
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Fulfill Order',
+                text: 'Mark this order as fulfilled?',
+                showCancelButton: true,
+                confirmButtonText: 'Fulfill',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!result.isConfirmed) return;
+
             showLoader();
-            
             try {
-                // Fetch product details to check category
                 const token = localStorage.getItem('admin_token');
-                const productResponse = await fetch(`${API_BASE}/api/admin/products`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                const response = await fetch(`${API_BASE}/api/admin/orders/${order.id}/action`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'complete' })
                 });
-                
-                if (!productResponse.ok) throw new Error('Failed to fetch products');
-                const productsData = await productResponse.json();
-                const products = Array.isArray(productsData) ? productsData : (productsData.products || []);
-                const product = products.find(p => p.id === firstItem.product_id);
-                
-                if (!product) {
-                    throw new Error('Product not found');
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to fulfill order');
                 }
-                
-                const isDirectTopup = product.product_category === 'direct_topup';
-                const isGiftCard = product.product_category === 'gift_cards' || product.product_category === 'games';
-                
-                let fulfillmentHTML = '';
-                
-                if (isGiftCard) {
-                    // Fetch available codes for this product
-                    const codesResponse = await fetch(`${API_BASE}/api/admin/products/${product.id}/codes`, {
-                        headers: { 'Authorization': `Bearer ${token}` }
-                    });
-                    
-                    if (!codesResponse.ok) throw new Error('Failed to fetch codes');
-                    const codesData = await codesResponse.json();
-                    const availableCodes = codesData.codes || codesData || [];
-                    
-                    if (availableCodes.length === 0) {
-                        fulfillmentHTML = `
-                            <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
-                                <p class="text-yellow-800 font-semibold"><i class="fas fa-exclamation-triangle mr-2"></i>No Codes Available</p>
-                                <p class="text-yellow-700 text-sm mt-1">Please upload codes for this product before fulfilling the order.</p>
-                            </div>
-                        `;
-                    } else {
-                        fulfillmentHTML = `
-                            <div class="mb-4">
-                                <p class="text-sm font-semibold mb-2">Select Codes to Assign (${firstItem.quantity} needed)</p>
-                                <div class="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3">
-                                    ${availableCodes.slice(0, 50).map(code => `
-                                        <label class="flex items-center gap-3 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                                            <input type="checkbox" class="code-checkbox" data-code-id="${code.id}" onchange="toggleCodeSelection(this)">
-                                            <span class="text-sm font-mono">${code.code || code.code_value}</span>
-                                        </label>
-                                    `).join('')}
-                                </div>
-                                <p class="text-xs text-gray-500 mt-2">Selected: <span id="selectedCount">0</span> / ${firstItem.quantity}</p>
-                            </div>
-                        `;
-                    }
-                } else if (isDirectTopup) {
-                    fulfillmentHTML = `
-                        <div class="mb-4">
-                            <p class="text-sm font-semibold mb-2">Manual Confirmation Content</p>
-                            <textarea id="manualContent" class="w-full p-3 border border-gray-200 rounded-lg" rows="6" placeholder="Enter confirmation message or instructions for the customer..."></textarea>
-                            <p class="text-xs text-gray-500 mt-2">This content will be sent to the customer as confirmation.</p>
-                        </div>
-                    `;
-                } else {
-                    // Other category - allow manual content
-                    fulfillmentHTML = `
-                        <div class="mb-4">
-                            <p class="text-sm font-semibold mb-2">Manual Content or Instructions</p>
-                            <textarea id="manualContent" class="w-full p-3 border border-gray-200 rounded-lg" rows="6" placeholder="Enter delivery information..."></textarea>
-                        </div>
-                    `;
-                }
-                
-                document.getElementById('fulfillmentContent').innerHTML = `
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-500">Order Reference</p>
-                        <p class="font-bold">${order.order_reference || order.id}</p>
-                    </div>
-                    <div class="mb-4">
-                        <p class="text-sm text-gray-500">Product</p>
-                        <p class="font-medium">${product.name} x${firstItem.quantity}</p>
-                    </div>
-                    ${fulfillmentHTML}
-                    <div class="flex gap-3 mt-6">
-                        <button class="btn-primary flex-1" onclick="completeFulfillment()">
-                            <i class="fas fa-check"></i> Complete Order
-                        </button>
-                        <button class="btn-primary flex-1" style="background: #EF4444;" onclick="rejectOrder()">
-                            <i class="fas fa-times"></i> Reject Order
-                        </button>
-                    </div>
-                    <button onclick="closeFulfillmentModal()" class="w-full mt-3 py-2 text-gray-600 hover:text-gray-800">Cancel</button>
-                `;
-                
-                document.getElementById('fulfillmentModal').classList.add('active');
-                
+
+                await Swal.fire({ icon: 'success', title: 'Success', text: 'Order fulfilled!' });
+                closeOrderModal();
+                loadOrders();
             } catch (error) {
-                console.error('Fulfillment modal error:', error);
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             } finally {
                 hideLoader();
             }
         };
 
-        const toggleCodeSelection = (checkbox) => {
-            const codeId = parseInt(checkbox.dataset.codeId);
-            if (checkbox.checked) {
-                selectedCodes.push(codeId);
-            } else {
-                selectedCodes = selectedCodes.filter(id => id !== codeId);
-            }
-            document.getElementById('selectedCount').textContent = selectedCodes.length;
-        };
-
-        const completeFulfillment = async () => {
-            if (!currentFulfillOrder) return;
-            
-            const manualContentEl = document.getElementById('manualContent');
-            const manualContent = manualContentEl ? manualContentEl.value : '';
-            
-            // Validate based on fulfillment type
-            if (selectedCodes.length === 0 && !manualContent) {
-                Swal.fire({ icon: 'warning', title: 'Missing Information', text: 'Please select codes or provide manual content.' });
-                return;
-            }
-            
-            showLoader();
-            try {
-                const token = localStorage.getItem('admin_token');
-                const payload = {
-                    action: 'complete',
-                    code_ids: selectedCodes.length > 0 ? selectedCodes : undefined,
-                    manual_content: manualContent || undefined
-                };
-                
-                const response = await fetch(`${API_BASE}/api/admin/orders/${currentFulfillOrder.id}/action`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.detail || 'Fulfillment failed');
-                }
-                
-                await Swal.fire({ icon: 'success', title: 'Order Fulfilled!', text: 'The customer has been notified.', timer: 2000, showConfirmButton: false });
-                closeFulfillmentModal();
-                loadOrders();
-            } catch (error) {
-                console.error('Fulfillment error:', error);
-                Swal.fire({ icon: 'error', title: 'Fulfillment Failed', text: error.message });
-            } finally {
-                hideLoader();
-            }
-        };
-
-        const rejectOrder = async () => {
-            if (!currentFulfillOrder) return;
-            
-            const result = await Swal.fire({
-                icon: 'warning',
-                title: 'Reject Order?',
-                text: 'This will mark the order as rejected and notify the customer.',
-                showCancelButton: true,
-                confirmButtonColor: '#EF4444',
-                confirmButtonText: 'Reject Order'
-            });
-            
-            if (!result.isConfirmed) return;
-            
-            showLoader();
-            try {
-                const token = localStorage.getItem('admin_token');
-                const response = await fetch(`${API_BASE}/api/admin/orders/${currentFulfillOrder.id}/action`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ action: 'reject' })
-                });
-                
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.detail || 'Rejection failed');
-                }
-                
-                await Swal.fire({ icon: 'success', title: 'Order Rejected', timer: 2000, showConfirmButton: false });
-                closeFulfillmentModal();
-                loadOrders();
-            } catch (error) {
-                console.error('Rejection error:', error);
-                Swal.fire({ icon: 'error', title: 'Rejection Failed', text: error.message });
-            } finally {
-                hideLoader();
-            }
-        };
-
-        const closeFulfillmentModal = () => {
-            document.getElementById('fulfillmentModal').classList.remove('active');
-            currentFulfillOrder = null;
-            selectedCodes = [];
-        };
-        
-        document.getElementById('fulfillmentModal').addEventListener('click', (e) => { if (e.target === document.getElementById('fulfillmentModal')) closeFulfillmentModal(); });
-
-        // Mobile & Theme Functions
-        const toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            sidebar.classList.toggle('mobile-open');
-            overlay.classList.toggle('visible');
-        };
-
-        const closeSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('visible');
-        };
-
-        const toggleDarkMode = () => {
-            document.body.classList.toggle('dark-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDarkMode);
-            updateMoonIcon();
-        };
-
-        const updateMoonIcon = () => {
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            const icons = document.querySelectorAll('[onclick="toggleDarkMode()"] i');
-            icons.forEach(icon => {
-                icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+        const resendCodes = async (orderRef) => {
+            await Swal.fire({
+                icon: 'info',
+                title: 'Resend Codes',
+                text: 'Codes will be resent to the customer email.',
+                showCancelButton: true
             });
         };
 
-        const updateMobileHeaderVisibility = () => {
-            const mobileHeader = document.querySelector('.mobile-header');
-            if (window.innerWidth < 768) {
-                mobileHeader.classList.add('visible');
-            } else {
-                mobileHeader.classList.remove('visible');
-            }
-        };
-
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-        }
-
-        document.addEventListener('DOMContentLoaded', () => { 
-            if (checkAdminAuth()) {
-                loadOrders();
-                updateMobileHeaderVisibility();
-                updateMoonIcon();
-            }
-        });
-
-        window.addEventListener('resize', updateMobileHeaderVisibility);
+        // Initialize
+        loadOrders();
     </script>
 </body>
 </html>

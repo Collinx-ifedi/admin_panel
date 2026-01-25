@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Details - Admin - KeyVault</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        tailwind.config = { theme: { extend: { colors: { primary: '#2563EB', secondary: '#1E293B', success: '#10B981', danger: '#EF4444', warning: '#F59E0B' }, fontFamily: { sans: ['Inter', 'sans-serif'] } } } }
+    </script>
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background-color: #F1F5F9; color: #1E293B; min-height: 100vh; display: flex; }
+        
+        /* Dark Mode */
+        body.dark-mode { background-color: #0F172A; color: #E2E8F0; }
+        body.dark-mode .card { background: #1E293B; }
+        body.dark-mode .sidebar { background: #0F172A; border-right: 1px solid #334155; }
+        body.dark-mode p { color: #E2E8F0; }
+        body.dark-mode .text-gray-500 { color: #94A3B8; }
+        body.dark-mode .text-secondary { color: #E2E8F0; }
+        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color: #E2E8F0; }
+        body.dark-mode .item-table th { background: #0F172A; color: #CBD5E1; }
+        body.dark-mode .item-table td { border-bottom-color: #334155; }
+        body.dark-mode .item-table tbody tr:hover { background: #0F172A; }
+
+        .progress-bar { position: fixed; top: 0; left: 0; width: 0%; height: 3px; background: linear-gradient(90deg, #2563EB, #3B82F6); z-index: 9999; }
+        .progress-bar.loading { animation: progress 1.5s ease-in-out infinite; }
+        @keyframes progress { 0% { width: 0%; } 50% { width: 70%; } 100% { width: 100%; } }
+
+        /* Mobile Header */
+        .mobile-header {
+            display: none; position: fixed; top: 0; left: 0; right: 0; height: 60px;
+            background: #1E293B; color: white; z-index: 100; align-items: center;
+            justify-content: space-between; padding: 0 16px;
+        }
+        body.dark-mode .mobile-header { background: #0F172A; }
+        .mobile-header.visible { display: flex; }
+
+        .hamburger-btn {
+            background: none; border: none; color: white; font-size: 24px;
+            cursor: pointer; width: 44px; height: 44px; display: flex;
+            align-items: center; justify-content: center;
+        }
+
+        .sidebar { width: 260px; background: #1E293B; min-height: 100vh; padding: 24px 16px; position: fixed; left: 0; top: 0; z-index: 50; transition: transform 0.3s ease; }
+        @media (max-width: 767px) { .sidebar { transform: translateX(-100%); top: 60px; } .sidebar.mobile-open { transform: translateX(0); } }
+
+        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; display: none; }
+        .sidebar-overlay.visible { display: block; }
+
+        .sidebar-nav a { display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #94A3B8; text-decoration: none; border-radius: 10px; transition: all 0.2s; font-weight: 500; margin-bottom: 4px; }
+        .sidebar-nav a:hover { background: rgba(255,255,255,0.1); color: #FFFFFF; }
+        .sidebar-nav a.active { background: #2563EB; color: #FFFFFF; }
+
+        .main-content { margin-left: 260px; flex: 1; padding: 32px; transition: margin-left 0.3s ease; }
+        @media (max-width: 767px) { .main-content { margin-left: 0; padding: 16px; margin-top: 60px; } }
+
+        .card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+        @media (max-width: 767px) { .card { padding: 16px; } }
+
+        .status-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; }
+        .status-badge.pending { background: #FEF3C7; color: #D97706; }
+        .status-badge.paid { background: #DBEAFE; color: #2563EB; }
+        .status-badge.in_progress { background: #FED7AA; color: #EA580C; }
+        .status-badge.completed { background: #D1FAE5; color: #059669; }
+        .status-badge.cancelled { background: #FEE2E2; color: #DC2626; }
+        .status-badge.rejected { background: #FEE2E2; color: #DC2626; }
+
+        .btn-primary { padding: 10px 20px; background: #2563EB; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary:hover { background: #1D4ED8; }
+        .btn-secondary { background: #E2E8F0; color: #1E293B; }
+        .btn-secondary:hover { background: #CBD5E1; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px; }
+        .info-item { background: #F8FAFC; padding: 16px; border-radius: 12px; }
+        body.dark-mode .info-item { background: #0F172A; }
+        .info-item-label { font-size: 12px; color: #64748B; font-weight: 600; text-transform: uppercase; margin-bottom: 4px; }
+        body.dark-mode .info-item-label { color: #94A3B8; }
+        .info-item-value { font-size: 16px; font-weight: 600; color: #1E293B; }
+        body.dark-mode .info-item-value { color: #E2E8F0; }
+
+        .item-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .item-table th, .item-table td { padding: 12px; text-align: left; border-bottom: 1px solid #E2E8F0; }
+        .item-table th { background: #F8FAFC; font-weight: 600; font-size: 12px; color: #64748B; text-transform: uppercase; }
+        body.dark-mode .item-table th { background: #0F172A; color: #CBD5E1; }
+        .item-table tbody tr:hover { background: #FAFBFC; }
+
+        .back-btn { display: inline-flex; align-items: center; gap: 8px; color: #2563EB; text-decoration: none; font-weight: 500; margin-bottom: 24px; transition: all 0.2s; }
+        .back-btn:hover { gap: 12px; }
+
+        .action-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+        @media (max-width: 767px) {
+            .action-buttons { flex-direction: column; }
+            .action-buttons button { width: 100%; }
+            .info-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="progress-bar" id="progressBar"></div>
+
+    <!-- Mobile Header -->
+    <header class="mobile-header md:hidden">
+        <button class="hamburger-btn" onclick="toggleSidebar()">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="flex items-center gap-2 flex-1 ml-2">
+            <div class="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <i class="fas fa-key text-white text-sm"></i>
+            </div>
+            <span class="text-white font-bold">KeyVault</span>
+        </div>
+        <div class="flex items-center gap-2">
+            <button onclick="toggleDarkMode()" class="w-10 h-10 rounded-lg hover:bg-white/10 flex items-center justify-center transition">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <aside class="sidebar md:static" id="sidebar">
+        <div class="flex items-center gap-3 mb-8 px-2">
+            <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center"><i class="fas fa-key text-white"></i></div>
+            <span class="text-white font-bold text-lg">KeyVault</span>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="dashboard.html"><i class="fas fa-th-large"></i> Dashboard</a>
+            <a href="products.html"><i class="fas fa-box"></i> Products</a>
+            <a href="orders.html" class="active"><i class="fas fa-shopping-bag"></i> Orders</a>
+            <a href="banners.html"><i class="fas fa-images"></i> Banners</a>
+            <div style="margin: 12px 0; padding: 8px 16px; color: #64748B; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Blog</div>
+            <a href="blog-posts.html"><i class="fas fa-newspaper"></i> Posts</a>
+            <a href="blog-comments.html"><i class="fas fa-comments"></i> Comments</a>
+        </nav>
+        <div class="absolute bottom-6 left-4 right-4">
+            <button onclick="adminLogout()" class="w-full flex items-center gap-3 px-4 py-3 text-gray-400 hover:text-white hover:bg-white/10 rounded-lg transition">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </button>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <a href="orders.html" class="back-btn">
+            <i class="fas fa-arrow-left"></i> Back to Orders
+        </a>
+
+        <!-- Order Header Card -->
+        <div class="card">
+            <div class="flex justify-between items-start mb-6">
+                <div>
+                    <h1 class="text-3xl font-bold text-secondary">Order <span id="orderRef">-</span></h1>
+                    <p class="text-gray-500 mt-2">Order details and fulfillment</p>
+                </div>
+                <span class="status-badge" id="statusBadge" style="padding: 8px 16px; font-size: 14px;"></span>
+            </div>
+
+            <!-- Order Summary Grid -->
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-item-label">Customer Email</div>
+                    <div class="info-item-value" id="customerEmail">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">Payment Method</div>
+                    <div class="info-item-value" id="paymentMethod">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">Total Amount</div>
+                    <div class="info-item-value" id="totalAmount">-</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-item-label">Created Date</div>
+                    <div class="info-item-value" id="createdDate">-</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Order Items Card -->
+        <div class="card">
+            <h2 class="text-xl font-bold text-secondary mb-6">Order Items</h2>
+            <div class="overflow-x-auto hidden md:block">
+                <table class="item-table">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Denomination</th>
+                            <th>Price</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="itemsTableBody">
+                        <tr><td colspan="4" class="text-center text-gray-500 py-8">Loading items...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+            <!-- Mobile Cards -->
+            <div id="itemsMobileList" class="block md:hidden">
+                <!-- Rendered via JS -->
+            </div>
+        </div>
+
+        <!-- Action Buttons Card -->
+        <div class="card">
+            <h2 class="text-xl font-bold text-secondary mb-6">Actions</h2>
+            <div class="action-buttons" id="actionButtons">
+                <button class="btn-primary" id="fulfillBtn" onclick="fulfillOrder()" style="display: none;">
+                    <i class="fas fa-check-circle"></i> Fulfill Order
+                </button>
+                <button class="btn-primary" id="resendBtn" style="background: #10B981; display: none;" onclick="resendCodes()">
+                    <i class="fas fa-redo"></i> Resend Codes
+                </button>
+                <button class="btn-secondary" onclick="location.href='orders.html'">
+                    <i class="fas fa-arrow-left"></i> Back to List
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const API_BASE = 'https://e-commerce-project-msez.onrender.com';
+        let currentOrder = null;
+
+        const checkAdminAuth = () => { if (!localStorage.getItem('admin_token')) { window.location.href = 'index.html'; return false; } return true; };
+        const adminLogout = () => { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href = 'index.html'; };
+        const showLoader = () => document.getElementById('progressBar').classList.add('loading');
+        const hideLoader = () => { document.getElementById('progressBar').classList.remove('loading'); document.getElementById('progressBar').style.width = '0%'; };
+        const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        const formatDate = (dateStr) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(dateStr));
+        const toggleDarkMode = () => document.body.classList.toggle('dark-mode');
+        const toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('mobile-open'); document.getElementById('sidebarOverlay').classList.toggle('visible'); };
+        const closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); };
+
+        if (!checkAdminAuth()) return;
+
+        const getOrderIdFromURL = () => {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('id');
+        };
+
+        const loadOrderDetails = async () => {
+            const orderId = getOrderIdFromURL();
+            if (!orderId) {
+                Swal.fire({ icon: 'error', title: 'Error', text: 'No order ID provided' });
+                setTimeout(() => location.href = 'orders.html', 2000);
+                return;
+            }
+
+            showLoader();
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/orders`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (response.status === 401) {
+                    adminLogout();
+                    return;
+                }
+
+                const allOrders = await response.json();
+                if (!response.ok) throw new Error('Failed to load orders');
+
+                // Find the order by ID or reference
+                const orders = Array.isArray(allOrders) ? allOrders : (allOrders.orders || []);
+                currentOrder = orders.find(o => 
+                    String(o.id) === String(orderId) || 
+                    o.order_reference === orderId
+                );
+
+                if (!currentOrder) {
+                    throw new Error('Order not found');
+                }
+
+                renderOrderDetails();
+            } catch (error) {
+                console.error('Failed to load order:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to load order details' });
+                setTimeout(() => location.href = 'orders.html', 2000);
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const renderOrderDetails = () => {
+            if (!currentOrder) return;
+
+            // Header Info
+            document.getElementById('orderRef').textContent = currentOrder.order_reference || currentOrder.id;
+            document.getElementById('customerEmail').textContent = currentOrder.user?.email || currentOrder.email || 'N/A';
+            document.getElementById('paymentMethod').textContent = currentOrder.payment_method || 'N/A';
+            document.getElementById('totalAmount').textContent = formatCurrency(currentOrder.total_amount_usd);
+            document.getElementById('createdDate').textContent = formatDate(currentOrder.created_at);
+
+            // Status Badge
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.className = `status-badge ${currentOrder.status}`;
+            statusBadge.style.padding = '8px 16px';
+            statusBadge.style.fontSize = '14px';
+            statusBadge.textContent = currentOrder.status.toUpperCase().replace('_', ' ');
+
+            // Items
+            const items = currentOrder.items || [];
+            
+            // Desktop Table
+            const tableRows = items.map(item => `
+                <tr>
+                    <td class="font-medium">${item.product_name || 'Unknown Product'}</td>
+                    <td>${item.variant_label_snapshot || item.denomination?.label || 'N/A'}</td>
+                    <td>${formatCurrency(item.unit_price_at_purchase)}</td>
+                    <td>
+                        <span class="status-badge completed" style="font-size: 12px; padding: 4px 8px;">
+                            ${item.code ? 'Delivered' : 'Pending'}
+                        </span>
+                    </td>
+                </tr>
+            `).join('');
+            document.getElementById('itemsTableBody').innerHTML = tableRows || '<tr><td colspan="4" class="text-center text-gray-500 py-8">No items in this order</td></tr>';
+
+            // Mobile Cards
+            const mobileCards = items.map(item => `
+                <div style="background: #F8FAFC; border-radius: 12px; padding: 16px; margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 12px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; margin-bottom: 4px;">${item.product_name || 'Unknown Product'}</div>
+                            <div style="font-size: 12px; color: #94A3B8;">${item.variant_label_snapshot || item.denomination?.label || 'N/A'}</div>
+                        </div>
+                        <span class="status-badge completed" style="font-size: 12px; padding: 4px 8px; white-space: nowrap; margin-left: 8px;">
+                            ${item.code ? 'Delivered' : 'Pending'}
+                        </span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #E2E8F0; padding-top: 12px;">
+                        <span style="color: #94A3B8; font-size: 12px;">Price</span>
+                        <span style="font-weight: 600; font-size: 16px;">${formatCurrency(item.unit_price_at_purchase)}</span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('itemsMobileList').innerHTML = mobileCards;
+
+            // Action Buttons
+            const fulfillBtn = document.getElementById('fulfillBtn');
+            const resendBtn = document.getElementById('resendBtn');
+
+            if (currentOrder.status === 'in_progress' || currentOrder.status === 'paid') {
+                fulfillBtn.style.display = 'inline-flex';
+                resendBtn.style.display = 'none';
+            } else if (currentOrder.status === 'completed') {
+                fulfillBtn.style.display = 'none';
+                resendBtn.style.display = 'inline-flex';
+            } else {
+                fulfillBtn.style.display = 'none';
+                resendBtn.style.display = 'none';
+            }
+        };
+
+        const fulfillOrder = async () => {
+            if (!currentOrder) return;
+
+            const result = await Swal.fire({
+                icon: 'question',
+                title: 'Fulfill Order',
+                text: 'Mark this order as fulfilled?',
+                showCancelButton: true,
+                confirmButtonText: 'Fulfill',
+                cancelButtonText: 'Cancel'
+            });
+
+            if (!result.isConfirmed) return;
+
+            showLoader();
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/orders/${currentOrder.id}/action`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ action: 'complete' })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to fulfill order');
+                }
+
+                await Swal.fire({ icon: 'success', title: 'Success', text: 'Order fulfilled!' });
+                await loadOrderDetails();
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const resendCodes = async () => {
+            await Swal.fire({
+                icon: 'info',
+                title: 'Resend Codes',
+                text: 'Codes will be resent to the customer email.',
+                confirmButtonText: 'OK'
+            });
+        };
+
+        // Initialize
+        loadOrderDetails();
+    </script>
+</body>
+</html>

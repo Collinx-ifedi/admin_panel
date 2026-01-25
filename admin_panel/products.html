@@ -75,7 +75,7 @@
         .main-content { margin-left: 260px; flex: 1; padding: 32px; transition: margin-left 0.3s ease; }
         @media (max-width: 767px) { .main-content { margin-left: 0; padding: 16px; margin-top: 60px; } }
 
-        .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); min-height: auto; max-height: none; }
+        .table-card { background: #FFFFFF; border-radius: 16px; padding: 24px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         @media (max-width: 767px) { .table-card { padding: 16px; overflow: visible; } }
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th { text-align: left; padding: 12px 16px; background: #F8FAFC; font-weight: 600; color: #64748B; font-size: 12px; text-transform: uppercase; }
@@ -88,38 +88,29 @@
         .btn-primary:hover { background: #1D4ED8; }
 
         .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 8px; border: none; cursor: pointer; transition: all 0.2s; }
+        .btn-manage { background: #EFF6FF; color: #2563EB; }
+        .btn-manage:hover { background: #2563EB; color: white; }
         .btn-edit { background: #EFF6FF; color: #2563EB; }
         .btn-edit:hover { background: #2563EB; color: white; }
         .btn-delete { background: #FEF2F2; color: #DC2626; }
         .btn-delete:hover { background: #DC2626; color: white; }
-        
-        /* Mobile card buttons - larger touch targets */
-        @media (max-width: 767px) {
-            .product-card-actions .btn-sm { padding: 12px 16px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; }
-        }
 
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; visibility: hidden; transition: all 0.3s; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal { background: white; border-radius: 20px; max-width: 700px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
+        .modal { background: white; border-radius: 20px; max-width: 800px; width: 100%; max-height: 90vh; overflow-y: auto; transform: scale(0.9); transition: transform 0.3s; }
         .modal-overlay.active .modal { transform: scale(1); }
+        body.dark-mode .modal { background: #1E293B; }
 
         .form-group { margin-bottom: 16px; }
         .form-label { display: block; font-size: 14px; font-weight: 500; margin-bottom: 6px; }
         .form-input, .form-select, .form-textarea { width: 100%; padding: 12px 14px; border: 2px solid #E2E8F0; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
         .form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: #2563EB; }
-        .form-textarea { resize: vertical; min-height: 100px; }
+        body.dark-mode .form-input, body.dark-mode .form-select { background: #0F172A; color: #E2E8F0; border-color: #334155; }
 
-        .toggle-switch { position: relative; width: 44px; height: 24px; background: #E2E8F0; border-radius: 12px; cursor: pointer; transition: all 0.2s; display: inline-block; }
-        .toggle-switch.active { background: #2563EB; }
-        .toggle-switch::after { content: ''; position: absolute; width: 20px; height: 20px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        .toggle-switch.active::after { left: 22px; }
-
-        .product-thumb { width: 60px; height: 40px; border-radius: 8px; object-fit: cover; }
         .badge { display: inline-block; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; }
         .badge-trending { background: #FEF3C7; color: #D97706; }
         .badge-featured { background: #DBEAFE; color: #2563EB; }
 
-        /* Mobile Product Cards */
         .product-card {
             background: #FFFFFF; border-radius: 12px; padding: 16px;
             margin-bottom: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);
@@ -136,6 +127,26 @@
         .product-card-value { font-size: 14px; font-weight: 600; color: #1E293B; }
         body.dark-mode .product-card-value { color: #E2E8F0; }
         .product-card-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+        .denomination-table { width: 100%; border-collapse: collapse; margin: 16px 0; }
+        .denomination-table th, .denomination-table td { padding: 12px; text-align: left; border-bottom: 1px solid #E2E8F0; }
+        body.dark-mode .denomination-table th, body.dark-mode .denomination-table td { border-bottom-color: #334155; }
+        .denomination-table th { background: #F8FAFC; font-weight: 600; font-size: 12px; color: #64748B; text-transform: uppercase; }
+        body.dark-mode .denomination-table th { background: #0F172A; color: #CBD5E1; }
+        .denomination-table tbody tr:hover { background: #FAFBFC; }
+        body.dark-mode .denomination-table tbody tr:hover { background: #0F172A; }
+
+        @media (max-width: 767px) {
+            .product-card-actions .btn-sm { padding: 12px 16px; font-size: 14px; min-height: 44px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+            .data-table { display: none; }
+            .product-card { display: block; }
+        }
+
+        @media (min-width: 768px) {
+            .product-card { display: none; }
+        }
+
+        .denominations-list { max-height: 400px; overflow-y: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
@@ -159,7 +170,7 @@
         </div>
     </header>
 
-    <div class="sidebar-overlay" onclick="closeSidebar()"></div>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
     <!-- Sidebar -->
     <aside class="sidebar md:static" id="sidebar">
@@ -192,25 +203,14 @@
                 <h1 class="text-2xl font-bold text-secondary">Products</h1>
                 <p class="text-gray-500">Manage your product catalog</p>
             </div>
-            <div class="flex gap-3">
-                <button class="btn-primary" onclick="openProductModal()">
-                    <i class="fas fa-plus"></i> Add Product
-                </button>
-                <button class="btn-primary" onclick="openUploadCodesModal()" style="background: #10B981;">
-                    <i class="fas fa-upload"></i> Upload Codes
-                </button>
-            </div>
+            <button class="btn-primary" onclick="openProductModal()">
+                <i class="fas fa-plus"></i> Add Product
+            </button>
         </div>
 
         <div class="table-card">
             <div class="flex items-center justify-between mb-6">
                 <input type="text" id="searchInput" class="form-input" placeholder="Search products..." style="max-width: 300px;" oninput="filterProducts()">
-                <select id="filterCategory" class="form-select" style="max-width: 200px;" onchange="filterProducts()">
-                    <option value="">All Categories</option>
-                    <option value="gaming">Gaming</option>
-                    <option value="music">Music</option>
-                    <option value="vouchers">Gift Cards</option>
-                </select>
             </div>
             <!-- Desktop Table View -->
             <div class="overflow-x-auto hidden md:block">
@@ -219,9 +219,8 @@
                         <tr>
                             <th>Product</th>
                             <th>Platform</th>
-                            <th>Price</th>
-                            <th>Stock</th>
-                            <th>Tags</th>
+                            <th>Status</th>
+                            <th>Created</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
@@ -237,40 +236,7 @@
         </div>
     </main>
 
-    <!-- Upload Codes Modal -->
-    <div class="modal-overlay" id="uploadCodesModal">
-        <div class="modal">
-            <div class="p-6 border-b border-gray-100">
-                <div class="flex items-center justify-between">
-                    <h2 class="text-xl font-bold text-secondary">Upload Product Codes</h2>
-                    <button onclick="closeUploadCodesModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-            </div>
-            <form id="uploadCodesForm" class="p-6" onsubmit="handleUploadCodes(event)">
-                <div class="form-group">
-                    <label class="form-label">Select Product</label>
-                    <select id="codeProductSelect" class="form-select" required>
-                        <option value="">Choose a product...</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Upload File (CSV or TXT)</label>
-                    <input type="file" id="codesFile" class="form-input" accept=".csv,.txt" required>
-                    <p class="text-sm text-gray-500 mt-2">
-                        <i class="fas fa-info-circle"></i> CSV format: one code per line or first column. TXT format: one code per line.
-                    </p>
-                </div>
-                <div class="flex gap-4 mt-6">
-                    <button type="submit" class="btn-primary flex-1">Upload Codes</button>
-                    <button type="button" onclick="closeUploadCodesModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- Product Modal -->
+    <!-- Add/Edit Product Modal -->
     <div class="modal-overlay" id="productModal">
         <div class="modal">
             <div class="p-6 border-b border-gray-100">
@@ -290,62 +256,35 @@
                     </div>
                     <div class="form-group">
                         <label class="form-label">Platform</label>
-                        <input type="text" id="productPlatform" class="form-input" placeholder="e.g. Steam, Xbox, PlayStation, Spotify..." required>
+                        <input type="text" id="productPlatform" class="form-input" placeholder="e.g. Steam, Xbox, PlayStation..." required>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">Product Category</label>
-                        <select id="productCategory" class="form-select" required onchange="togglePlayerIdField()">
+                        <label class="form-label">Category</label>
+                        <select id="productCategory" class="form-select" required>
                             <option value="gift_cards">Gift Cards</option>
                             <option value="games">Games</option>
                             <option value="direct_topup">Direct Top-up</option>
                             <option value="others">Others</option>
                         </select>
-                        <p class="text-sm text-gray-500 mt-1">
-                            <i class="fas fa-info-circle"></i> Determines delivery method
-                        </p>
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Price (USD)</label>
-                        <input type="number" id="productPrice" class="form-input" step="0.01" min="0" placeholder="49.99" required>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Discount %</label>
-                        <input type="number" id="productDiscount" class="form-input" min="0" max="100" placeholder="0">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Stock Quantity</label>
-                        <input type="number" id="productStock" class="form-input" min="0" placeholder="100" required>
-                    </div>
-                    <div class="form-group">
+                    <div class="form-group col-span-2">
                         <label class="form-label">Product Image</label>
                         <input type="file" id="productImage" class="form-input" accept="image/*" required>
-                        <p class="text-sm text-gray-500 mt-2">
-                            <i class="fas fa-info-circle"></i> Supported formats: JPG, PNG, GIF, WebP
-                        </p>
                     </div>
                     <div class="form-group col-span-2">
                         <label class="form-label">Description</label>
-                        <textarea id="productDescription" class="form-textarea" placeholder="Product description..."></textarea>
-                    </div>
-                    <div class="form-group" id="playerIdToggleContainer" style="display: none;">
-                        <label class="form-label flex items-center gap-3">
-                            <span class="toggle-switch" id="togglePlayerID" onclick="this.classList.toggle('active')"></span>
-                            Requires Player ID
-                        </label>
-                        <p class="text-sm text-gray-500 mt-1">
-                            <i class="fas fa-info-circle"></i> Enable for direct top-ups requiring user/player ID
-                        </p>
+                        <textarea id="productDescription" class="form-textarea" placeholder="Product description..." style="min-height: 100px;"></textarea>
                     </div>
                     <div class="form-group">
                         <label class="form-label flex items-center gap-3">
-                            <span class="toggle-switch" id="toggleTrending" onclick="this.classList.toggle('active')"></span>
-                            Is Trending
+                            <input type="checkbox" id="productFeatured" class="w-4 h-4">
+                            Featured
                         </label>
                     </div>
                     <div class="form-group">
                         <label class="form-label flex items-center gap-3">
-                            <span class="toggle-switch" id="toggleFeatured" onclick="this.classList.toggle('active')"></span>
-                            Is Featured
+                            <input type="checkbox" id="productTrending" class="w-4 h-4">
+                            Trending
                         </label>
                     </div>
                 </div>
@@ -357,23 +296,97 @@
         </div>
     </div>
 
+    <!-- Denominations Management Modal -->
+    <div class="modal-overlay" id="denominationsModal">
+        <div class="modal">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-secondary">Manage Denominations - <span id="modalProductName"></span></h2>
+                    <button onclick="closeDenominationsModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6">
+                <!-- Denominations List -->
+                <div>
+                    <h3 class="font-semibold text-secondary mb-4">Denominations</h3>
+                    <div class="denominations-list" id="denominationsList">
+                        <p class="text-gray-500 text-sm">Loading denominations...</p>
+                    </div>
+                </div>
+
+                <!-- Add New Denomination -->
+                <div class="mt-6 pt-6 border-t border-gray-200">
+                    <h3 class="font-semibold text-secondary mb-4">Add New Denomination</h3>
+                    <form id="denominationForm" onsubmit="addDenomination(event)">
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="form-group">
+                                <label class="form-label">Label (e.g. 50 UC)</label>
+                                <input type="text" id="denomLabel" class="form-input" placeholder="50 UC" required>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Price (USD)</label>
+                                <input type="number" id="denomPrice" class="form-input" step="0.01" min="0" placeholder="9.99" required>
+                            </div>
+                        </div>
+                        <button type="submit" class="btn-primary w-full mt-4">
+                            <i class="fas fa-plus"></i> Add Denomination
+                        </button>
+                    </form>
+                </div>
+
+                <div class="flex gap-4 mt-6">
+                    <button onclick="closeDenominationsModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Codes Modal (Nested) -->
+    <div class="modal-overlay" id="uploadCodesModal">
+        <div class="modal">
+            <div class="p-6 border-b border-gray-100">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-xl font-bold text-secondary">Upload Codes</h2>
+                    <button onclick="closeUploadCodesModal()" class="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <form id="uploadCodesForm" class="p-6" onsubmit="handleUploadCodes(event)">
+                <div class="form-group">
+                    <label class="form-label">Upload File (CSV or TXT)</label>
+                    <input type="file" id="codesFile" class="form-input" accept=".csv,.txt" required>
+                    <p class="text-sm text-gray-500 mt-2">
+                        <i class="fas fa-info-circle"></i> One code per line
+                    </p>
+                </div>
+                <div class="flex gap-4 mt-6">
+                    <button type="submit" class="btn-primary flex-1">Upload Codes</button>
+                    <button type="button" onclick="closeUploadCodesModal()" class="btn-primary flex-1" style="background: #E2E8F0; color: #1E293B;">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_BASE = 'https://e-commerce-project-msez.onrender.com';
         let allProducts = [];
+        let currentProductId = null;
+        let currentDenominationId = null;
 
-        const checkAdminAuth = () => {
-            if (!localStorage.getItem('admin_token')) { window.location.href = 'index.html'; return false; }
-            return true;
-        };
-
+        const checkAdminAuth = () => { if (!localStorage.getItem('admin_token')) { window.location.href = 'index.html'; return false; } return true; };
         const adminLogout = () => { localStorage.removeItem('admin_token'); localStorage.removeItem('admin_user'); window.location.href = 'index.html'; };
-
         const showLoader = () => document.getElementById('progressBar').classList.add('loading');
         const hideLoader = () => { document.getElementById('progressBar').classList.remove('loading'); document.getElementById('progressBar').style.width = '0%'; };
+        const toggleDarkMode = () => document.body.classList.toggle('dark-mode');
+        const toggleSidebar = () => { document.getElementById('sidebar').classList.toggle('mobile-open'); document.getElementById('sidebarOverlay').classList.toggle('visible'); };
+        const closeSidebar = () => { document.getElementById('sidebar').classList.remove('mobile-open'); document.getElementById('sidebarOverlay').classList.remove('visible'); };
+        const formatDate = (dateStr) => new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', year: 'numeric' }).format(new Date(dateStr));
 
-        const formatCurrency = (amount) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
+        if (!checkAdminAuth()) return;
 
-        // Load Products from API
         const loadProducts = async () => {
             showLoader();
             try {
@@ -381,394 +394,332 @@
                 const response = await fetch(`${API_BASE}/api/admin/products`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                
+
                 if (response.status === 401) {
-                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
-                    window.location.href = 'index.html';
+                    adminLogout();
                     return;
                 }
-                
+
                 const data = await response.json();
-                // Handle both array response and object with 'products' key
-                allProducts = Array.isArray(data)
-    ? data
-    : (data.products || data.items || []);
+                if (!response.ok) throw new Error(data.detail || 'Failed to load products');
+                
+                allProducts = data;
                 renderProducts(allProducts);
             } catch (error) {
                 console.error('Failed to load products:', error);
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load products' });
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to load products' });
             } finally {
                 hideLoader();
             }
         };
 
         const renderProducts = (products) => {
-            // Render Desktop Table
-            document.getElementById('productsTable').innerHTML = products.map(p => `
+            // Desktop table
+            const tableHtml = products.map(p => `
                 <tr>
+                    <td class="font-medium">${p.name}</td>
+                    <td>${p.platform}</td>
+                    <td><span class="badge badge-featured">${p.is_deleted ? 'Deleted' : 'Active'}</span></td>
+                    <td class="text-sm text-gray-500">${formatDate(p.created_at)}</td>
                     <td>
-                        <div class="flex items-center gap-3">
-                            <img src="${p.image_url}" alt="${p.name}" class="product-thumb" onerror="this.src='https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=100'">
-                            <div>
-                                <p class="font-medium">${p.name}</p>
-                                <p class="text-sm text-gray-500">${p.category}</p>
-                            </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-sm btn-manage" onclick="openDenominationsModal(${p.id}, '${p.name}')">
+                                <i class="fas fa-tasks"></i> Manage Denominations
+                            </button>
+                            <button class="btn-sm btn-edit" onclick="editProduct(${p.id})">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})">
+                                <i class="fas fa-trash"></i>
+                            </button>
                         </div>
-                    </td>
-                    <td class="text-gray-600">${p.platform}</td>
-                    <td>
-                        <span class="font-semibold">${formatCurrency(p.price_usd)}</span>
-                        ${p.discount_percent > 0 ? `<span class="text-danger text-sm ml-2">-${p.discount_percent}%</span>` : ''}
-                    </td>
-                    <td>
-                        <span class="${p.stock_quantity > 10 ? 'text-success' : 'text-danger'}">${p.stock_quantity}</span>
-                    </td>
-                    <td>
-                        ${p.is_trending ? '<span class="badge badge-trending mr-1">Trending</span>' : ''}
-                        ${p.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
-                    </td>
-                    <td>
-                        <button class="btn-sm btn-edit mr-2" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i></button>
-                        <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
             `).join('');
+            document.getElementById('productsTable').innerHTML = tableHtml;
 
-            // Render Mobile Cards
-            document.getElementById('productsMobileList').innerHTML = products.map(p => `
+            // Mobile cards
+            const cardsHtml = products.map(p => `
                 <div class="product-card">
                     <div class="product-card-header">
-                        <img src="${p.image_url}" alt="${p.name}" class="product-card-image" onerror="this.src='https://images.unsplash.com/photo-1612287230202-1ff1d85d1bdf?w=100'">
-                        <div class="product-card-info">
-                            <p class="product-card-title">${p.name}</p>
-                            <p class="product-card-meta">${p.platform}</p>
+                        <img src="${p.image_url}" alt="${p.name}" class="product-card-image">
+                        <div class="product-card-info" style="flex: 1;">
+                            <div class="product-card-title">${p.name}</div>
+                            <div class="product-card-meta">${p.platform}</div>
+                            <div class="product-card-meta">${formatDate(p.created_at)}</div>
                         </div>
                     </div>
-                    <div class="product-card-row">
-                        <span class="product-card-label">Price</span>
-                        <span class="product-card-value">${formatCurrency(p.price_usd)}${p.discount_percent > 0 ? ` <span class="text-danger text-xs">-${p.discount_percent}%</span>` : ''}</span>
-                    </div>
-                    <div class="product-card-row">
-                        <span class="product-card-label">Stock</span>
-                        <span class="product-card-value ${p.stock_quantity > 10 ? 'text-success' : 'text-danger'}">${p.stock_quantity}</span>
-                    </div>
-                    ${p.is_trending || p.is_featured ? `
-                    <div class="product-card-row">
-                        <span class="product-card-label">Tags</span>
-                        <span>
-                            ${p.is_trending ? '<span class="badge badge-trending mr-1">Trending</span>' : ''}
-                            ${p.is_featured ? '<span class="badge badge-featured">Featured</span>' : ''}
-                        </span>
-                    </div>
-                    ` : ''}
                     <div class="product-card-actions">
-                        <button class="btn-sm btn-edit" onclick="editProduct(${p.id})"><i class="fas fa-edit"></i> Edit</button>
-                        <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})"><i class="fas fa-trash"></i> Delete</button>
+                        <button class="btn-sm btn-manage" onclick="openDenominationsModal(${p.id}, '${p.name}')" style="flex: 1;">
+                            <i class="fas fa-tasks"></i> Manage
+                        </button>
+                        <button class="btn-sm btn-edit" onclick="editProduct(${p.id})" style="flex: 1;">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn-sm btn-delete" onclick="deleteProduct(${p.id})" style="flex: 1;">
+                            <i class="fas fa-trash"></i>
+                        </button>
                     </div>
                 </div>
             `).join('');
+            document.getElementById('productsMobileList').innerHTML = cardsHtml;
         };
 
         const filterProducts = () => {
             const search = document.getElementById('searchInput').value.toLowerCase();
-            const category = document.getElementById('filterCategory').value;
-            let filtered = allProducts;
-            if (search) filtered = filtered.filter(p => p.name.toLowerCase().includes(search) || p.platform.toLowerCase().includes(search));
-            if (category) filtered = filtered.filter(p => p.category === category);
+            const filtered = allProducts.filter(p => p.name.toLowerCase().includes(search) || p.platform.toLowerCase().includes(search));
             renderProducts(filtered);
         };
 
-        // Toggle Player ID field visibility based on category
-        const togglePlayerIdField = () => {
-            const category = document.getElementById('productCategory').value;
-            const playerIdContainer = document.getElementById('playerIdToggleContainer');
-            const playerIdToggle = document.getElementById('togglePlayerID');
-            
-            if (category === 'direct_topup') {
-                playerIdContainer.style.display = 'block';
-            } else {
-                playerIdContainer.style.display = 'none';
-                playerIdToggle.classList.remove('active'); // Reset toggle if not direct_topup
-            }
-        };
-
-        // Modal Functions
-        const openProductModal = (product = null) => {
-            document.getElementById('modalTitle').textContent = product ? 'Edit Product' : 'Add Product';
-            document.getElementById('productId').value = product?.id || '';
-            document.getElementById('productName').value = product?.name || '';
-            document.getElementById('productPlatform').value = product?.platform || '';
-            document.getElementById('productCategory').value = product?.product_category || 'others';
-            document.getElementById('productPrice').value = product?.price_usd || '';
-            document.getElementById('productDiscount').value = product?.discount_percent || '0';
-            document.getElementById('productStock').value = product?.stock_quantity || '';
-            // Note: Do NOT set productImage.value - file inputs cannot be set via JavaScript for security reasons
-            document.getElementById('productImage').value = '';
-            document.getElementById('productDescription').value = product?.description || '';
-            document.getElementById('toggleTrending').classList.toggle('active', product?.is_trending || false);
-            document.getElementById('toggleFeatured').classList.toggle('active', product?.is_featured || false);
-            document.getElementById('togglePlayerID').classList.toggle('active', product?.requires_player_id || false);
-            
-            // Show/hide Player ID field based on category
-            togglePlayerIdField();
-            
+        const openProductModal = () => {
+            document.getElementById('productForm').reset();
+            document.getElementById('productId').value = '';
+            document.getElementById('modalTitle').textContent = 'Add Product';
             document.getElementById('productModal').classList.add('active');
         };
 
         const closeProductModal = () => document.getElementById('productModal').classList.remove('active');
 
-        // ============ UPLOAD CODES MODAL ============
-        const openUploadCodesModal = () => {
-            const select = document.getElementById('codeProductSelect');
-            select.innerHTML = '<option value="">Choose a product...</option>';
-            allProducts.forEach(p => {
-                select.innerHTML += `<option value="${p.id}">${p.name}</option>`;
-            });
-            document.getElementById('uploadCodesModal').classList.add('active');
-        };
-
-        const closeUploadCodesModal = () => {
-            document.getElementById('uploadCodesModal').classList.remove('active');
-            document.getElementById('uploadCodesForm').reset();
-        };
-
-        const handleUploadCodes = async (e) => {
-            e.preventDefault();
-            const productId = document.getElementById('codeProductSelect').value;
-            const fileInput = document.getElementById('codesFile');
-            const file = fileInput.files[0];
-
-            if (!productId || !file) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Please select a product and file' });
-                return;
-            }
-
-            showLoader();
-            const formData = new FormData();
-            formData.append('file', file);
-
-            try {
-                const token = localStorage.getItem('admin_token');
-                // Upload codes to backend for the selected product
-                const response = await fetch(`${API_BASE}/api/admin/products/${productId}/upload-codes`, {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    body: formData
-                });
-
-                if (response.status === 401) {
-                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
-                    window.location.href = 'index.html';
-                    return;
-                }
-
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Upload failed');
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Codes Uploaded!',
-                    text: `Successfully added ${data.codes_added} codes to this product.`,
-                    timer: 2000,
-                    showConfirmButton: false
-                });
-                closeUploadCodesModal();
-                loadProducts();
-            } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Upload Failed', text: error.message });
-            } finally {
-                hideLoader();
-            }
-        };
-
-        const editProduct = (id) => {
-            const product = allProducts.find(p => p.id === id);
-            if (product) openProductModal(product);
-        };
-
-        const deleteProduct = (id) => {
-            Swal.fire({
-                icon: 'warning', title: 'Delete Product?', text: 'This action cannot be undone.',
-                showCancelButton: true, confirmButtonColor: '#DC2626', confirmButtonText: 'Delete'
-            }).then(async (result) => {
-                if (result.isConfirmed) {
-                    showLoader();
-                    try {
-                        const token = localStorage.getItem('admin_token');
-                        const response = await fetch(`${API_BASE}/api/admin/products/${id}`, {
-                            method: 'DELETE',
-                            headers: { 'Authorization': `Bearer ${token}` }
-                        });
-
-                        if (response.status === 401) {
-                            await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
-                            localStorage.removeItem('admin_token');
-                            localStorage.removeItem('admin_user');
-                            window.location.href = 'index.html';
-                            return;
-                        }
-
-                        if (!response.ok) {
-                            const data = await response.json();
-                            throw new Error(data.detail || 'Delete failed');
-                        }
-
-                        await Swal.fire({ icon: 'success', title: 'Deleted!', timer: 1500, showConfirmButton: false });
-                        loadProducts();
-                    } catch (error) {
-                        Swal.fire({ icon: 'error', title: 'Delete Failed', text: error.message });
-                    } finally {
-                        hideLoader();
-                    }
-                }
-            });
-        };
-
         const saveProduct = async (e) => {
             e.preventDefault();
-            
-            const productId = document.getElementById('productId').value;
-            const productImageInput = document.getElementById('productImage');
-            
-            // For new products, image is required
-            if (!productId && productImageInput.files.length === 0) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Please select an image for the new product' });
-                return;
-            }
-            
-            const productName = document.getElementById('productName').value;
-            const productPlatform = document.getElementById('productPlatform').value;
-            const productCategory = document.getElementById('productCategory').value;
-            const productPrice = document.getElementById('productPrice').value;
-            const productDiscount = document.getElementById('productDiscount').value || '0';
-            const productStock = document.getElementById('productStock').value;
-            const productDescription = document.getElementById('productDescription').value;
-            const isTrending = document.getElementById('toggleTrending').classList.contains('active');
-            const isFeatured = document.getElementById('toggleFeatured').classList.contains('active');
-            const requiresPlayerId = document.getElementById('togglePlayerID').classList.contains('active');
-
-            // Build FormData with all fields
             const formData = new FormData();
-            formData.append('name', productName);
-            formData.append('platform', productPlatform);
-            formData.append('product_category', productCategory); // Use product_category enum
-            formData.append('requires_player_id', requiresPlayerId); // New field
-            formData.append('price_usd', productPrice);
-            formData.append('discount_percent', productDiscount);
-            formData.append('stock_quantity', productStock);
-            formData.append('description', productDescription);
-            formData.append('is_trending', isTrending);
-            formData.append('is_featured', isFeatured);
-
-            // Add image file if selected - use 'file' key to match backend
-            if (productImageInput.files.length > 0) {
-                formData.append('file', productImageInput.files[0]);
-            }
+            const productId = document.getElementById('productId').value;
+            
+            formData.append('name', document.getElementById('productName').value);
+            formData.append('platform', document.getElementById('productPlatform').value);
+            formData.append('product_category', document.getElementById('productCategory').value);
+            formData.append('description', document.getElementById('productDescription').value);
+            formData.append('is_featured', document.getElementById('productFeatured').checked);
+            formData.append('is_trending', document.getElementById('productTrending').checked);
+            
+            const imageFile = document.getElementById('productImage').files[0];
+            if (imageFile) formData.append('file', imageFile);
 
             showLoader();
             try {
                 const token = localStorage.getItem('admin_token');
                 const method = productId ? 'PUT' : 'POST';
-                const endpoint = productId ? `/api/admin/products/${productId}` : '/api/admin/products';
-                
-                const response = await fetch(`${API_BASE}${endpoint}`, {
+                const url = productId ? `${API_BASE}/api/admin/products/${productId}` : `${API_BASE}/api/admin/products`;
+
+                const response = await fetch(url, {
                     method: method,
                     headers: { 'Authorization': `Bearer ${token}` },
                     body: formData
                 });
 
-                if (response.status === 401) {
-                    await Swal.fire({ icon: 'warning', title: 'Session Expired', text: 'Your session has expired. Please log in again.' });
-                    localStorage.removeItem('admin_token');
-                    localStorage.removeItem('admin_user');
-                    window.location.href = 'index.html';
-                    return;
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to save product');
                 }
 
-                const data = await response.json();
-                if (!response.ok) throw new Error(data.detail || 'Save failed');
-
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Product Saved!',
-                    text: productId ? 'Product updated successfully' : 'Product created successfully. You can now upload codes if needed.',
-                    timer: 2000,
-                    showConfirmButton: false
-                });
+                await Swal.fire({ icon: 'success', title: 'Success', text: productId ? 'Product updated!' : 'Product created!' });
                 closeProductModal();
                 loadProducts();
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Save Failed', text: error.message });
+                console.error('Error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             } finally {
                 hideLoader();
             }
         };
 
-        // Close modal on overlay click
-        document.getElementById('productModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('productModal')) closeProductModal();
-        });
-        document.getElementById('uploadCodesModal').addEventListener('click', (e) => {
-            if (e.target === document.getElementById('uploadCodesModal')) closeUploadCodesModal();
-        });
+        const editProduct = (productId) => {
+            const product = allProducts.find(p => p.id === productId);
+            if (!product) return;
 
-        // Init
-        // Mobile & Theme Functions
-        const toggleSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            sidebar.classList.toggle('mobile-open');
-            overlay.classList.toggle('visible');
+            document.getElementById('productId').value = product.id;
+            document.getElementById('productName').value = product.name;
+            document.getElementById('productPlatform').value = product.platform;
+            document.getElementById('productCategory').value = product.product_category;
+            document.getElementById('productDescription').value = product.description || '';
+            document.getElementById('productFeatured').checked = product.is_featured;
+            document.getElementById('productTrending').checked = product.is_trending;
+            document.getElementById('modalTitle').textContent = 'Edit Product';
+            document.getElementById('productModal').classList.add('active');
         };
 
-        const closeSidebar = () => {
-            const sidebar = document.getElementById('sidebar');
-            const overlay = document.querySelector('.sidebar-overlay');
-            sidebar.classList.remove('mobile-open');
-            overlay.classList.remove('visible');
-        };
-
-        const toggleDarkMode = () => {
-            document.body.classList.toggle('dark-mode');
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            localStorage.setItem('darkMode', isDarkMode);
-            updateMoonIcon();
-        };
-
-        const updateMoonIcon = () => {
-            const isDarkMode = document.body.classList.contains('dark-mode');
-            const icons = document.querySelectorAll('[onclick="toggleDarkMode()"] i');
-            icons.forEach(icon => {
-                icon.className = isDarkMode ? 'fas fa-sun' : 'fas fa-moon';
+        const deleteProduct = async (productId) => {
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Delete Product',
+                text: 'Are you sure? This action cannot be undone.',
+                showCancelButton: true,
+                confirmButtonText: 'Delete',
+                cancelButtonText: 'Cancel'
             });
-        };
 
-        const updateMobileHeaderVisibility = () => {
-            const mobileHeader = document.querySelector('.mobile-header');
-            if (window.innerWidth < 768) {
-                mobileHeader.classList.add('visible');
-            } else {
-                mobileHeader.classList.remove('visible');
-            }
-        };
+            if (!result.isConfirmed) return;
 
-        if (localStorage.getItem('darkMode') === 'true') {
-            document.body.classList.add('dark-mode');
-        }
+            showLoader();
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/products/${productId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
 
-        document.addEventListener('DOMContentLoaded', () => { 
-            if (checkAdminAuth()) {
+                if (!response.ok) throw new Error('Failed to delete product');
+
+                await Swal.fire({ icon: 'success', title: 'Deleted', text: 'Product deleted successfully' });
                 loadProducts();
-                updateMobileHeaderVisibility();
-                updateMoonIcon();
+            } catch (error) {
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            } finally {
+                hideLoader();
             }
-        });
+        };
 
-        window.addEventListener('resize', updateMobileHeaderVisibility);
+        const openDenominationsModal = async (productId, productName) => {
+            currentProductId = productId;
+            document.getElementById('modalProductName').textContent = productName;
+            document.getElementById('denominationsModal').classList.add('active');
+            await loadDenominations(productId);
+        };
+
+        const closeDenominationsModal = () => {
+            document.getElementById('denominationsModal').classList.remove('active');
+            document.getElementById('denominationForm').reset();
+        };
+
+        const loadDenominations = async (productId) => {
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/products/${productId}/denominations`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('Failed to load denominations');
+
+                const denominations = await response.json();
+                renderDenominations(denominations);
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            }
+        };
+
+        const renderDenominations = (denominations) => {
+            if (denominations.length === 0) {
+                document.getElementById('denominationsList').innerHTML = '<p class="text-gray-500 text-sm">No denominations yet. Add one below.</p>';
+                return;
+            }
+
+            const html = `
+                <table class="denomination-table">
+                    <thead>
+                        <tr>
+                            <th>Label</th>
+                            <th>Price</th>
+                            <th>Discount</th>
+                            <th>Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${denominations.map(d => `
+                            <tr>
+                                <td>${d.label}</td>
+                                <td>$${d.price_usd.toFixed(2)}</td>
+                                <td>${d.discount_percent || 0}%</td>
+                                <td>${d.stock_quantity}</td>
+                                <td>
+                                    <button class="btn-sm btn-primary" onclick="openUploadCodesModal(${d.id})">
+                                        <i class="fas fa-upload"></i> Upload Codes
+                                    </button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            document.getElementById('denominationsList').innerHTML = html;
+        };
+
+        const addDenomination = async (e) => {
+            e.preventDefault();
+
+            const label = document.getElementById('denomLabel').value;
+            const price = parseFloat(document.getElementById('denomPrice').value);
+
+            showLoader();
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/products/${currentProductId}/denominations`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        label: label,
+                        price_usd: price,
+                        discount_percent: 0
+                    })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to create denomination');
+                }
+
+                await Swal.fire({ icon: 'success', title: 'Success', text: 'Denomination added!' });
+                document.getElementById('denominationForm').reset();
+                await loadDenominations(currentProductId);
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const openUploadCodesModal = (denominationId) => {
+            currentDenominationId = denominationId;
+            document.getElementById('uploadCodesForm').reset();
+            document.getElementById('uploadCodesModal').classList.add('active');
+        };
+
+        const closeUploadCodesModal = () => {
+            document.getElementById('uploadCodesModal').classList.remove('active');
+        };
+
+        const handleUploadCodes = async (e) => {
+            e.preventDefault();
+
+            const file = document.getElementById('codesFile').files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            showLoader();
+            try {
+                const token = localStorage.getItem('admin_token');
+                const response = await fetch(`${API_BASE}/api/admin/denominations/${currentDenominationId}/upload-codes`, {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to upload codes');
+                }
+
+                const result = await response.json();
+                await Swal.fire({ icon: 'success', title: 'Success', text: `${result.codes_added} codes uploaded!` });
+                closeUploadCodesModal();
+                await loadDenominations(currentProductId);
+            } catch (error) {
+                console.error('Error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: error.message });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        // Initialize
+        loadProducts();
     </script>
 </body>
 </html>
