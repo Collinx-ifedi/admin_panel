@@ -170,6 +170,9 @@
         .btn-delete { background: #FEF2F2; color: #DC2626; }
         .btn-delete:hover { background: #DC2626; color: white; }
 
+        .btn-primary { background: #2563EB; color: white; }
+        .btn-primary:hover { background: #1D4ED8; }
+
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000;
             display: flex; align-items: center; justify-content: center; padding: 20px;
@@ -202,6 +205,16 @@
             transition: all 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         .toggle-switch.active::after { left: 22px; }
+
+        /* Dark Mode for Modals */
+        body.dark-mode .modal { background: #1E293B; color: #E2E8F0; }
+        body.dark-mode .form-input { background: #0F172A; border-color: #334155; color: #E2E8F0; }
+        body.dark-mode .form-input:focus { border-color: #2563EB; }
+        body.dark-mode .data-table { color: #E2E8F0; }
+        body.dark-mode .data-table th { background: #0F172A; color: #CBD5E1; }
+        body.dark-mode .data-table td { border-bottom-color: #334155; color: #E2E8F0; }
+        body.dark-mode .btn-primary { background: #2563EB; }
+        body.dark-mode .btn-primary:hover { background: #1D4ED8; }
     </style>
 </head>
 <body>
@@ -298,6 +311,13 @@
             </div>
         </div>
 
+        <!-- User Management Button -->
+        <div class="mb-6">
+            <button onclick="openUserManagementModal()" class="px-6 py-3 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition flex items-center gap-2">
+                <i class="fas fa-users"></i> User Management
+            </button>
+        </div>
+
         <!-- Stats -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div class="stat-card">
@@ -370,6 +390,74 @@
             </table>
         </div>
     </main>
+
+    <!-- User Management Modal -->
+    <div class="modal-overlay" id="userManagementModal">
+        <div class="modal bg-white dark:bg-gray-800 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-secondary dark:text-white">User Management</h2>
+                <button onclick="closeUserManagementModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <input type="text" id="userSearchInput" placeholder="Search users by email..." class="form-input w-full" onkeyup="searchUsers()">
+            </div>
+
+            <div class="max-h-96 overflow-y-auto">
+                <table class="data-table w-full" id="userListTable">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="userListBody">
+                        <!-- Rendered via JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message User Modal -->
+    <div class="modal-overlay" id="messageUserModal">
+        <div class="modal bg-white dark:bg-gray-800 p-6">
+            <div class="flex items-center justify-between mb-6">
+                <h2 class="text-2xl font-bold text-secondary dark:text-white">Send Message</h2>
+                <button onclick="closeMessageUserModal()" class="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
+                    <i class="fas fa-times text-2xl"></i>
+                </button>
+            </div>
+
+            <div class="mb-4">
+                <p class="text-gray-600 dark:text-gray-300 mb-4">To: <span id="messageRecipientEmail" class="font-semibold text-primary"></span></p>
+            </div>
+
+            <form onsubmit="sendMessage(event)">
+                <div class="form-group">
+                    <label class="form-label">Subject (Optional)</label>
+                    <input type="text" id="messageSubject" placeholder="Email subject..." class="form-input">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Message (Required)</label>
+                    <textarea id="messageBody" placeholder="Type your message here..." class="form-input" rows="5" required></textarea>
+                </div>
+
+                <div class="flex gap-3">
+                    <button type="submit" class="flex-1 px-4 py-2 bg-primary text-white rounded-lg font-semibold hover:bg-blue-700 transition" id="sendMessageBtn">
+                        Send Message
+                    </button>
+                    <button type="button" onclick="closeMessageUserModal()" class="flex-1 px-4 py-2 bg-gray-200 text-gray-800 rounded-lg font-semibold hover:bg-gray-300 transition">
+                        Cancel
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 
     <script>
         // =========================================================
@@ -490,6 +578,182 @@
             localStorage.setItem('language', lang);
             console.log('[v0] Language changed to:', lang);
             // Language switching logic can be extended here
+        };
+
+        // =========================================================
+        // USER MANAGEMENT FUNCTIONS
+        // =========================================================
+        let allUsers = [];
+        let currentMessageUserId = null;
+
+        const openUserManagementModal = async () => {
+            const modal = document.getElementById('userManagementModal');
+            modal.classList.add('active');
+            await loadUsers();
+        };
+
+        const closeUserManagementModal = () => {
+            const modal = document.getElementById('userManagementModal');
+            modal.classList.remove('active');
+        };
+
+        const loadUsers = async () => {
+            try {
+                showLoader();
+                const data = await api.get('/api/admin/users');
+                allUsers = Array.isArray(data) ? data : data.users || [];
+                renderUsers(allUsers);
+            } catch (error) {
+                console.error('[v0] Failed to load users:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to load users' });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const renderUsers = (users) => {
+            const tbody = document.getElementById('userListBody');
+            if (!users || users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="3" class="text-center text-gray-500">No users found</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr>
+                    <td class="font-medium">${user.email}</td>
+                    <td>
+                        <span class="status-badge ${user.is_banned ? 'cancelled' : 'completed'}">
+                            ${user.is_banned ? 'Banned' : 'Active'}
+                        </span>
+                    </td>
+                    <td class="flex gap-2">
+                        ${user.is_banned ? 
+                            `<button onclick="unbanUser(${user.id})" class="btn-sm btn-edit">
+                                <i class="fas fa-check-circle mr-1"></i>Unban
+                            </button>` :
+                            `<button onclick="banUser(${user.id})" class="btn-sm btn-delete">
+                                <i class="fas fa-ban mr-1"></i>Ban
+                            </button>`
+                        }
+                        <button onclick="openMessageUserModal(${user.id}, '${user.email}')" class="btn-sm btn-primary">
+                            <i class="fas fa-envelope mr-1"></i>Message
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        };
+
+        const searchUsers = () => {
+            const searchTerm = document.getElementById('userSearchInput').value.toLowerCase();
+            const filtered = allUsers.filter(user => user.email.toLowerCase().includes(searchTerm));
+            renderUsers(filtered);
+        };
+
+        const banUser = async (userId) => {
+            const confirm = await Swal.fire({
+                icon: 'warning',
+                title: 'Ban User?',
+                text: 'This user will not be able to log in.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, ban them'
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            try {
+                showLoader();
+                const response = await fetch(`${API_BASE}/api/admin/users/${userId}/ban`, {
+                    method: 'POST',
+                    headers: api.getHeaders()
+                });
+                if (!response.ok) throw new Error('Ban failed');
+                await Swal.fire({ icon: 'success', title: 'User Banned', text: 'The user has been banned.' });
+                await loadUsers();
+            } catch (error) {
+                console.error('[v0] Ban user error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to ban user' });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const unbanUser = async (userId) => {
+            const confirm = await Swal.fire({
+                icon: 'info',
+                title: 'Unban User?',
+                text: 'This user will be able to log in again.',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, unban them'
+            });
+
+            if (!confirm.isConfirmed) return;
+
+            try {
+                showLoader();
+                const response = await fetch(`${API_BASE}/api/admin/users/${userId}/unban`, {
+                    method: 'POST',
+                    headers: api.getHeaders()
+                });
+                if (!response.ok) throw new Error('Unban failed');
+                await Swal.fire({ icon: 'success', title: 'User Unbanned', text: 'The user has been unbanned.' });
+                await loadUsers();
+            } catch (error) {
+                console.error('[v0] Unban user error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to unban user' });
+            } finally {
+                hideLoader();
+            }
+        };
+
+        const openMessageUserModal = (userId, email) => {
+            currentMessageUserId = userId;
+            document.getElementById('messageRecipientEmail').textContent = email;
+            document.getElementById('messageSubject').value = '';
+            document.getElementById('messageBody').value = '';
+            document.getElementById('messageUserModal').classList.add('active');
+        };
+
+        const closeMessageUserModal = () => {
+            document.getElementById('messageUserModal').classList.remove('active');
+            currentMessageUserId = null;
+        };
+
+        const sendMessage = async (event) => {
+            event.preventDefault();
+            const subject = document.getElementById('messageSubject').value;
+            const body = document.getElementById('messageBody').value;
+
+            if (!body.trim()) {
+                Swal.fire({ icon: 'warning', title: 'Required', text: 'Message body cannot be empty' });
+                return;
+            }
+
+            const btn = document.getElementById('sendMessageBtn');
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+
+            try {
+                showLoader();
+                const response = await fetch(`${API_BASE}/api/admin/users/${currentMessageUserId}/messages`, {
+                    method: 'POST',
+                    headers: api.getHeaders(),
+                    body: JSON.stringify({
+                        subject: subject || 'Notification from Admin',
+                        body: body
+                    })
+                });
+
+                if (!response.ok) throw new Error('Send failed');
+                await Swal.fire({ icon: 'success', title: 'Message Sent', text: 'Your message has been delivered.' });
+                closeMessageUserModal();
+            } catch (error) {
+                console.error('[v0] Send message error:', error);
+                Swal.fire({ icon: 'error', title: 'Error', text: 'Failed to send message' });
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Send Message';
+                hideLoader();
+            }
         };
 
         // Apply saved theme on load
