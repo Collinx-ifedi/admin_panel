@@ -516,7 +516,7 @@
                 closeProductModal();
                 loadProducts();
             } catch (error) {
-                console.error('Error:', error);
+                console.error('[v0] Product save error:', error.message, error);
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             } finally {
                 hideLoader();

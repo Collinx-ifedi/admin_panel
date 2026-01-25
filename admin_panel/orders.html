@@ -242,7 +242,7 @@
                 allOrders = Array.isArray(data) ? data : (data.orders || []);
                 renderOrders(allOrders);
             } catch (error) {
-                console.error('Failed to load orders:', error);
+                console.error('[v0] Load orders error:', error.message, error);
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message || 'Failed to load orders' });
             } finally {
                 hideLoader();
@@ -253,12 +253,12 @@
             // Desktop table
             const tableHtml = orders.map(o => `
                 <tr>
-                    <td class="font-medium">${o.order_reference || o.id}</td>
+                    <td class="font-medium hidden md:table-cell">${o.order_reference || o.id}</td>
                     <td class="text-gray-500">${o.user?.email || o.email || 'N/A'}</td>
                     <td class="text-center">${(o.items || []).length}</td>
                     <td class="font-semibold">${formatCurrency(o.total_amount_usd)}</td>
                     <td><span class="status-badge ${o.status}">${o.status.charAt(0).toUpperCase() + o.status.slice(1).replace('_', ' ')}</span></td>
-                    <td class="text-gray-500 text-sm">${formatDate(o.created_at)}</td>
+                    <td class="text-gray-500 text-sm hidden md:table-cell">${formatDate(o.created_at)}</td>
                     <td><button class="btn-sm" onclick="viewOrder('${o.order_reference || o.id}')"><i class="fas fa-eye mr-1"></i>View</button></td>
                 </tr>
             `).join('');
@@ -399,6 +399,7 @@
                 closeOrderModal();
                 loadOrders();
             } catch (error) {
+                console.error('[v0] Fulfill order error:', error.message, error);
                 Swal.fire({ icon: 'error', title: 'Error', text: error.message });
             } finally {
                 hideLoader();
